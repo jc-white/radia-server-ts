@@ -1,18 +1,29 @@
 import {Component} from '@nestjs/common';
-import {DBService} from '../../db/db.service';
-import {HeroService} from '../common/services/hero.service';
+import {Hero} from '../../../models/hero/hero.model';
+import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
+import * as shortid from 'shortid';
 
 @Component()
 export class ChargenService {
-	constructor(private heroService: HeroService, private db: DBService) {
+	constructor() {
 
 	}
 
-	getBackstories() {
-		return [];
-	}
-
-	getBackstoryByID(backstoryID: string) {
-		return {};
+	createHero(userID: string, formData: IChargenFormData) {
+		return Hero.create({
+			heroID:      shortid.generate(),
+			userID:      userID,
+			name:        formData.name,
+			gender:      formData.gender,
+			backstoryID: formData.backstoryID,
+			traits:      formData.traitIDs,
+			stats:       {
+				str: 5,
+				int: 5,
+				dex: 5,
+				con: 5,
+				luk: 5
+			}
+		});
 	}
 }

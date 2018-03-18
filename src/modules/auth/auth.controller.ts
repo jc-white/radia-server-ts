@@ -12,6 +12,8 @@ export class AuthController {
 	@Get('/session')
 	async getSession(@Req() req, @Res() res, @Next() next) {
 		if (req.isAuthenticated()) {
+			console.log('is authenticated');
+
 			res.json({
 				success: true,
 				session: req.session,

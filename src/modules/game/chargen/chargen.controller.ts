@@ -1,4 +1,6 @@
 import {Body, Controller, Get, Post, Put, Req, Res} from '@nestjs/common';
+import {Hero} from '../../../models/hero/hero.model';
+import {BackstoriesDict} from '../dicts/backstories.dict';
 import {ChargenService} from './chargen.service';
 import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
 import {HeroService} from '../common/services/hero.service';
@@ -13,10 +15,8 @@ export class ChargenController {
 	}
 
 	@Get('/backstory')
-	async getBackstories(@Req() req, @Res() res) {
-		let backStories = await this.chargenService.getBackstories();
-
-		res.json(backStories);
+	getBackstories(@Req() req, @Res() res) {
+		res.json(BackstoriesDict);
 	}
 
 	@Post('/submit')
@@ -30,39 +30,32 @@ export class ChargenController {
 			return;
 		}
 
-		const numTraits   = formData.traitIDs.length,
-		      traitIDs    = _.uniq(formData.traitIDs),
-		      backstoryID = formData.backstoryID;
-
-		const traitsToApply: Array<string>                = [];
-		const skillsToApply: { [string: string]: number } = {};
+		const traitIDs    = _.uniq(formData.traitIDs),
+		      backstoryID = formData.backstoryID,
+		      backstory   = BackstoriesDict[backstoryID];
 
 		if (_.isEmpty(formData.name)) {
 			return fail('A hero name is required.');
 		}
 
-		if (!isNumeric(formData.gender) || ([1,2].indexOf(formData.gender) == -1)) {
+		if (!isNumeric(formData.gender) || ([1, 2].indexOf(formData.gender) == -1)) {
 			return fail('Invalid gender selected.');
 		}
 
 		if (!backstoryID) {
 			return fail('Invalid backstory selected.');
 		} else {
-			const backstory = await this.chargenService.getBackstoryByID(backstoryID);
-
 			if (_.isEmpty(backstory)) {
 				return fail('Invalid backstory selected.');
 			} else {
 				console.log('Backstory valid');
-
-				backstory.traits.forEach(trait => traitsToApply.push(trait));
 			}
 		}
 
 		if (traitIDs.length !== 2) {
 			return fail('Invalid trait(s) selected.');
 		} else {
-			if (_.intersection(traitsToApply, traitIDs).length) {
+			if (_.intersection(backstory.traits, traitIDs).length) {
 				return fail('You cannot select a trait included in your backstory.');
 			}
 
@@ -77,8 +70,16 @@ export class ChargenController {
 			}
 		}
 
-		res.json({
-			success: true
-		});
+		const newHero = await this.chargenService.createHero(req.session.passport.user, formData);
+
+		if (newHero._id) {
+			res.json({
+				success: true
+			});
+		} else {
+			res.json({
+				success: false
+			});
+		}
 	}
 }

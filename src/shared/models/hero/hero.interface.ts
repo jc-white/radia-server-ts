@@ -3,7 +3,4 @@ export interface IBackstory {
 	name: string;
 	desc: string;
 	traits: Array<string>;
-	skills: {
-		[name: string]: number
-	}
 }

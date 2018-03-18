@@ -5,24 +5,36 @@ import cookieParser = require('cookie-parser');
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as passport from 'passport';
+import {User} from './modules/auth/user.entity';
+import {DBService} from './modules/db/db.service';
 import {GameSocketGateway} from './modules/socket/socket.gateway';
 import {IOAuth2StrategyOption, OAuth2Strategy} from 'passport-google-oauth';
 import {Strategy as LocalStrategy} from 'passport-local';
 import {AuthService} from './modules/auth/auth.service';
-import {IUserDocument} from './shared/models/user/user.model';
 
 const mongoClient    = require('mongodb').MongoClient;
 const expressSession = require('express-session'),
       MongoStore     = require('connect-mongo')(expressSession);
 
+export let App;
+export let MongoClientInstance;
+
+process.on('unhandledRejection', (reason, p) => {
+	console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+	// application specific logging, throwing an error, or other logic here
+});
 
 async function bootstrap() {
 	console.log('Bootstrapping...');
 	const app = await NestFactory.create(ApplicationModule);
+	App       = app;
 
 	console.log('Connecting to mongoDB...');
 	const mongo = await mongoClient.connect(config.mongo.uri),
 	      db    = mongo.db('radia');
+
+	MongoClientInstance = mongo;
+	DBService.rawDb     = db;
 
 	app.use(cookieParser());
 	app.use(bodyParser.urlencoded({extended: true}));
@@ -53,13 +65,13 @@ async function bootstrap() {
 		saveUninitialized: false
 	});
 
-	passport.use(new OAuth2Strategy(googleParams, async function (accessToken, refreshToken, profile, done) {
+/*	passport.use(new OAuth2Strategy(googleParams, async function (accessToken, refreshToken, profile, done) {
 		let result = AuthService.findUserByGoogleID(profile.id);
 
 		return done(null, result[0]);
-	}));
+	}));*/
 
-	passport.serializeUser(function (user: IUserDocument, cb) {
+	passport.serializeUser(function (user: User, cb) {
 		cb(null, user.userID);
 	});
 

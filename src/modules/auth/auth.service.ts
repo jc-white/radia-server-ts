@@ -4,7 +4,6 @@ import {DBService} from '../db/db.service';
 import * as bcrypt from 'bcrypt';
 import * as shortid from 'shortid';
 import * as _ from 'lodash';
-import {IUserDocument, User} from '../../shared/models/user/user.model';
 
 @Component()
 export class AuthService {
@@ -13,7 +12,7 @@ export class AuthService {
 	}
 
 	static async findUserByGoogleID(googleID: string) {
-		const result = await DBService.connection.collection('users').findOne({
+		const result = await DBService.rawDb.collection('users').findOne({
 			googleID: googleID
 		});
 
@@ -21,7 +20,7 @@ export class AuthService {
 	}
 
 	static async validateCredentials(email: string, password: string): Promise<any> {
-		const result = await DBService.connection.collection('users').findOne({
+		const result = await DBService.rawDb.collection('users').findOne({
 			email: email
 		});
 
@@ -48,20 +47,20 @@ export class AuthService {
 		}
 	}
 
-	async getUserByID(id: string, forClient = false) {
+	async getUserByID(id: string) {
 		if (_.isEmpty(id)) {
-			console.error('Tried to get invalid user: ', id);
+			console.log('Tried to get invalid user: ', id);
 
 			return null;
 		}
 
-		return this.db.gameDB.Users.findOne({
+		return DBService.rawDb.collection('users').findOne({
 			userID: id
 		});
 	}
 
 	async createUser(formData: UserFormData) {
-		const existing = await DBService.connection.collection('users').findOne({
+		const existing = await DBService.rawDb.collection('users').findOne({
 			email: formData.email
 		});
 
@@ -75,19 +74,16 @@ export class AuthService {
 		const newUserID = shortid.generate(),
 		      hash      = await bcrypt.hash(formData.password, 10);
 
-		const userData: IUserDocument = {
+		const insertedUser = await DBService.rawDb.collection('users').insertOne({
 			userID:   newUserID,
 			email:    formData.email,
 			password: hash
-		};
+		});
 
-		//const result = await DBService.r.table('users').insert(newUser);
-		const newUser = await this.db.gameDB.Users.insert(userData);
-
-		if (newUser._id) {
+		if (insertedUser.insertedCount > 0) {
 			return {
 				success: true,
-				user:    _.omit(userData, 'password')
+				user:    _.omit(insertedUser, 'password')
 			}
 		} else {
 			return {
