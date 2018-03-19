@@ -1,5 +1,4 @@
 import {Body, Controller, Get, Post, Put, Req, Res} from '@nestjs/common';
-import {Hero} from '../../../models/hero/hero.model';
 import {BackstoriesDict} from '../dicts/backstories.dict';
 import {ChargenService} from './chargen.service';
 import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';

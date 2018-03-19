@@ -1,7 +1,7 @@
 import {Component, Global} from '@nestjs/common';
-import {Hero} from '../../../../models/hero/hero.model';
 import {DBService} from '../../../db/db.service';
 import {IChargenFormData} from '../../../../shared/interfaces/chargen/chargen.interface';
+import {Heroes} from '../../models/hero/hero.model';
 
 @Global()
 @Component()
@@ -11,15 +11,15 @@ export class HeroService {
 	}
 
 	getHeroes(userID: string) {
-		return Hero.find({
+		return Heroes.find({
 			userID: userID
 		});
 	}
 
 	countHeroes(userID: string) {
-		return this.db.model.Hero.count({
+		return Heroes.find({
 			userID: userID
-		});
+		}).exec();
 	}
 
 	async createHero(formData: IChargenFormData) {

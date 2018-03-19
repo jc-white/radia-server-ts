@@ -1,16 +1,17 @@
 import {NestFactory} from '@nestjs/core';
+import * as mongoose from "mongoose";
 import {config} from '../config/config.local';
 import {ApplicationModule} from './modules/app.module';
 import cookieParser = require('cookie-parser');
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as passport from 'passport';
-import {User} from './modules/auth/user.entity';
 import {DBService} from './modules/db/db.service';
 import {GameSocketGateway} from './modules/socket/socket.gateway';
 import {IOAuth2StrategyOption, OAuth2Strategy} from 'passport-google-oauth';
 import {Strategy as LocalStrategy} from 'passport-local';
 import {AuthService} from './modules/auth/auth.service';
+import {User} from './modules/auth/user.model';
 
 const mongoClient    = require('mongodb').MongoClient;
 const expressSession = require('express-session'),
@@ -18,6 +19,8 @@ const expressSession = require('express-session'),
 
 export let App;
 export let MongoClientInstance;
+export let MongooseInstance = mongoose;
+
 
 process.on('unhandledRejection', (reason, p) => {
 	console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
@@ -32,6 +35,10 @@ async function bootstrap() {
 	console.log('Connecting to mongoDB...');
 	const mongo = await mongoClient.connect(config.mongo.uri),
 	      db    = mongo.db('radia');
+
+	await mongoose.connect(config.mongo.uri);
+
+	console.log('Connected to mongoose');
 
 	MongoClientInstance = mongo;
 	DBService.rawDb     = db;
@@ -65,18 +72,18 @@ async function bootstrap() {
 		saveUninitialized: false
 	});
 
-/*	passport.use(new OAuth2Strategy(googleParams, async function (accessToken, refreshToken, profile, done) {
-		let result = AuthService.findUserByGoogleID(profile.id);
+	/*	passport.use(new OAuth2Strategy(googleParams, async function (accessToken, refreshToken, profile, done) {
+			let result = AuthService.findUserByGoogleID(profile.id);
 
-		return done(null, result[0]);
-	}));*/
+			return done(null, result[0]);
+		}));*/
 
 	passport.serializeUser(function (user: User, cb) {
 		cb(null, user.userID);
 	});
 
 	passport.deserializeUser(async function (id: any, cb) {
-		cb(null, await mongo.db('radia').collection('users').findOne({userID: id}));
+		cb(null, await mongoose.connection.collection('users').findOne({userID: id}));
 	});
 
 	passport.use(new LocalStrategy({

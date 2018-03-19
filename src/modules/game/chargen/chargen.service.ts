@@ -1,7 +1,7 @@
 import {Component} from '@nestjs/common';
-import {Hero} from '../../../models/hero/hero.model';
 import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
 import * as shortid from 'shortid';
+import {Heroes} from '../models/hero/hero.model';
 
 @Component()
 export class ChargenService {
@@ -10,7 +10,7 @@ export class ChargenService {
 	}
 
 	createHero(userID: string, formData: IChargenFormData) {
-		return Hero.create({
+		return Heroes.create({
 			heroID:      shortid.generate(),
 			userID:      userID,
 			name:        formData.name,
