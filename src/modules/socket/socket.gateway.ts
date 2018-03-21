@@ -6,7 +6,7 @@ import * as mongoose from 'mongoose';
 import {Users} from '../auth/user.model';
 import {DBService} from '../db/db.service';
 import {HeroService} from '../game/common/services/hero.service';
-import {Heroes} from '../game/models/hero/hero.model';
+import {Hero, Heroes} from '../game/models/hero/hero.model';
 import {PacketService} from './packet.service';
 import {GamePacket} from './packets/game-packet.interface';
 import {PHeroUpdate} from './packets/heroes/heroes.packets';
@@ -68,7 +68,7 @@ export class GameSocketGateway implements OnGatewayConnection, OnGatewayDisconne
 			const heroes = await this.heroService.getHeroes(sender.userID),
 			      pack   = new GamePacket<PHeroUpdate>('heroes', 'heroUpdate', heroes);
 
-			console.log(heroes);
+			console.log(pack);
 
 			this.packetService.sendPacket(player, pack);
 		}
