@@ -1,10 +1,10 @@
-import {Component} from '@nestjs/common';
+import {Component, Global} from '@nestjs/common';
 import {Dictionary} from 'lodash';
 import {Socket} from 'socket.io';
-import {PlayerSocket} from './player-socket.interface';
-import {Player} from './player.class';
+import {PlayerSocket} from '../../../socket/player-socket.interface';
+import {Player} from '../../../socket/player.class';
 
-@Component()
+@Global()
 export class PlayerService {
 	players: Dictionary<Player> = {};
 
@@ -12,11 +12,11 @@ export class PlayerService {
 
 	}
 
-	addPlayer(userID: string, socket: PlayerSocket) {
+	addPlayer(userID: number, socket: PlayerSocket) {
 		this.players[userID] = new Player(userID, socket);
 	}
 
-	removePlayer(userID: string) {
+	removePlayer(userID: number) {
 		delete this.players[userID];
 	}
 

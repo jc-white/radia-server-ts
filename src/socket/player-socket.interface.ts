@@ -1,9 +1,8 @@
-import {MongoStore} from 'connect-mongo';
 import {Socket} from "socket.io";
 
 
 export interface PlayerSocket extends Socket {
-	userID: string;
+	userID: number;
 	handshake: {
 		headers: any;
 		time: string;
@@ -13,12 +12,11 @@ export interface PlayerSocket extends Socket {
 		issued: number;
 		url: string;
 		query: any;
-		sessionStore: MongoStore;
 		sessionID: string;
 		session: {
 			cookie: Object,
 			passport: {
-				user: string
+				user: number
 			}
 		}
 	}

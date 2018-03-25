@@ -2,17 +2,13 @@ import {
 	OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway,
 	WebSocketServer
 } from '@nestjs/websockets';
-import * as mongoose from 'mongoose';
-import {Users} from '../auth/user.model';
-import {DBService} from '../db/db.service';
-import {HeroService} from '../game/common/services/hero.service';
-import {Hero, Heroes} from '../game/models/hero/hero.model';
-import {PacketService} from './packet.service';
-import {GamePacket} from './packets/game-packet.interface';
-import {PHeroUpdate} from './packets/heroes/heroes.packets';
+import {DBService} from '../modules/db/db.service';
+import {HeroService} from '../modules/game/services/hero.service';
+import {PacketService} from '../modules/game/services/packet.service';
+import {PacketHeroUpdate} from './packets/heroes/heroes.packets';
 import {PlayerSocket} from './player-socket.interface';
 import {GameSocketAuthMiddleware} from './socket-auth.middleware';
-import {PlayerService} from './player.service';
+import {PlayerService} from '../modules/game/services/player.service';
 
 const sharedSession = require('express-socket.io-session');
 
@@ -26,7 +22,7 @@ export class GameSocketGateway implements OnGatewayConnection, OnGatewayDisconne
 	@WebSocketServer()
 	private server: any;
 
-	constructor(private heroService: HeroService, private playerService: PlayerService, private dbService: DBService, private packetService: PacketService) {
+	constructor(private playerService: PlayerService, private dbService: DBService) {
 
 	}
 
@@ -54,23 +50,19 @@ export class GameSocketGateway implements OnGatewayConnection, OnGatewayDisconne
 
 		sender.emit('connected');
 
-		console.log('Counting heroes');
+		try {
+			const heroCount = await DBService.knex('heroes').where('userID', sender.userID).count('heroID').first();
 
-		const heroCount = await Heroes.count({
-			userID: sender.userID
-		});
+			if (heroCount.count == 0) {
+				sender.emit('redirect', 'game/new');
+			} else {
+				const heroes = await HeroService.getHeroes(sender.userID, true),
+				      pack   = new PacketHeroUpdate(heroes);
 
-		if (heroCount == 0) {
-			sender.emit('redirect', 'game/new');
-		} else {
-			console.log('Getting heroes');
-
-			const heroes = await this.heroService.getHeroes(sender.userID),
-			      pack   = new GamePacket<PHeroUpdate>('heroes', 'heroUpdate', heroes);
-
-			console.log(pack);
-
-			this.packetService.sendPacket(player, pack);
+				PacketService.sendPacket(player, pack);
+			}
+		} catch (err) {
+			console.log(err);
 		}
 	}
 }

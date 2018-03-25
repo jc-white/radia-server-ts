@@ -1,7 +1,7 @@
 export class GamePacket<T extends {}> {
 	eventHandler: string;
 	eventType: string;
-	packet: T;
+	data: T;
 
 	constructor(eventHandler: string, eventType: string, data: T) {
 		Object.assign(this, {

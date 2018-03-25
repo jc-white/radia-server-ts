@@ -1,16 +1,20 @@
-import {Module} from '@nestjs/common';
-import {HeroService} from './common/services/hero.service';
+import {Global, Module} from '@nestjs/common';
 import {ChargenModule} from "./chargen/chargen.module";
+import {HeroService} from './services/hero.service';
+import {PlayerService} from './services/player.service';
 
+@Global()
 @Module({
-	modules: [
+	imports: [
 		ChargenModule
 	],
 	components: [
-		HeroService
+		HeroService,
+		PlayerService
 	],
 	exports: [
-		HeroService
+		HeroService,
+		PlayerService
 	]
 })
 export class GameModule {

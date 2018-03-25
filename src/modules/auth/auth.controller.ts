@@ -26,7 +26,7 @@ export class AuthController {
 		}
 	}
 
-	@Get('/google')
+/*	@Get('/google')
 	authGoogle(@Req() req, @Res() res, @Next() next) {
 		let handler = passport.authenticate('google', {scope: ['https://www.googleapis.com/auth/plus.login']});
 
@@ -42,7 +42,7 @@ export class AuthController {
 		});
 
 		return handler(req, res, next);
-	}
+	}*/
 
 	@Post('/login')
 	authLocal(@Req() req, @Res() res, @Next() next) {

@@ -1,15 +1,10 @@
-import {prop, Typegoose} from 'typegoose';
-import {MongooseInstance} from '../../server';
+import {Model} from 'objection';
 
-export class User extends Typegoose {
-	@prop() userID: string;
-	@prop() email: string;
-	@prop() password: string;
+export class User extends Model {
+	static tableName: string = 'users';
+	static idColumn: string = 'userID';
+
+	userID: string;
+	email: string;
+	password: string;
 }
-
-export const Users = new User().getModelForClass(User, {
-	existingMongoose: MongooseInstance,
-	schemaOptions: {
-		collection: 'users'
-	}
-});

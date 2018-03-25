@@ -2,7 +2,7 @@ import {Body, Controller, Get, Post, Put, Req, Res} from '@nestjs/common';
 import {BackstoriesDict} from '../dicts/backstories.dict';
 import {ChargenService} from './chargen.service';
 import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
-import {HeroService} from '../common/services/hero.service';
+import {HeroService} from '../services/hero.service';
 import {TraitsDictionary} from '../../../shared/dicts/traits.dict';
 import * as _ from 'lodash';
 import {isNumeric} from '../../../shared/functions/utils';
@@ -71,7 +71,7 @@ export class ChargenController {
 
 		const newHero = await this.chargenService.createHero(req.session.passport.user, formData);
 
-		if (newHero._id) {
+		if (newHero.heroID) {
 			res.json({
 				success: true
 			});

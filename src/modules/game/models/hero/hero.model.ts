@@ -1,8 +1,7 @@
-import {Document, Model} from 'mongoose';
-import {arrayProp, instanceMethod, post, pre, prop, Typegoose} from 'typegoose';
-import {MongooseInstance} from '../../../../server';
+import {Model} from 'objection';
 import {EGender} from '../../../../shared/models/hero/hero-misc.enum';
 import {IStatList} from '../../../../shared/models/hero/stats.interface';
+import {BackstoriesDict} from '../../dicts/backstories.dict';
 
 export interface ICalculatedHeroFields {
 	vitality: {
@@ -17,63 +16,60 @@ export interface ICalculatedHeroFields {
 	traits: Array<string>;
 }
 
-function ensureAllFields(hero: Hero) {
-	const newInstance = new Hero();
+export class Hero extends Model {
+	static tableName: string                = 'heroes';
+	static idColumn: string                 = 'heroID';
+	static virtualAttributes: Array<string> = ['calculated'];
 
-	Object.keys(newInstance).forEach(field => {
-		if (!hero[field]) {
-			hero[field] = newInstance[field];
-		}
-	});
-}
+	$parseJson(json, opt) {
+		json = super.$parseJson(json, opt);
+		this.calc();
 
-@post<Hero>('init', (result: Hero) => {
-	try {
-		ensureAllFields(result);
-		result.calc();
-	} catch (err) {
-		console.log('Hero init err', err);
+		return json;
 	}
-})
-export class Hero extends Typegoose {
-	@prop() heroID: string;
-	@prop() userID: string;
-	@prop() name: string;
-	@prop({enum: Object.values(EGender)}) gender: EGender;
-	@prop() level: number    = 1;
-	@prop() backstoryID: string;
-	@arrayProp({items: String}) traits: Array<string>;
-	@prop() stats: IStatList = {
+
+	$afterGet() {
+		this.calc();
+	}
+
+	heroID: number        = void 0;
+	userID: number        = null;
+	name: string          = null;
+	gender: EGender       = 1;
+	level: number         = 1;
+	backstoryID: string   = null;
+	traits: Array<string> = [];
+	skills: {
+		[skillName: string]: number;
+	}                     = {};
+	stats: IStatList      = {
 		str: 5,
 		int: 5,
 		dex: 5,
 		con: 5,
 		luk: 5
 	};
-	@prop() skills: {
-		[skillName: string]: number;
-	};
-	@prop() vitality: {
+	vitality: {
 		health: [number, number],
 		stamina: [number, number],
 		mana: [number, number]
-	}                        = {
+	}                     = {
 		health:  [85, 85],
 		stamina: [85, 85],
 		mana:    [85, 85]
 	};
 
-	private _calculated: ICalculatedHeroFields;
+	$calculated: ICalculatedHeroFields;
 
 	get calculated() {
-		return this._calculated;
+		return this.$calculated;
 	}
 
-	set calculated(calc: ICalculatedHeroFields) {
-		this._calculated = calc;
+	constructor(isDummy: boolean = false) {
+		super();
 	}
 
-	@instanceMethod calc() {
+	calc() {
 		try {
 			const calc: ICalculatedHeroFields = {
 				vitality: {
@@ -92,7 +88,7 @@ export class Hero extends Typegoose {
 				traits:   []
 			};
 
-			//Calculate vitality
+			//region Calculate vitality
 			const statBonusMap = {
 				health:  ['con', 3],
 				mana:    ['int', 3],
@@ -100,8 +96,6 @@ export class Hero extends Typegoose {
 			};
 
 			Object.keys(statBonusMap).forEach(stat => {
-				console.log('Calculating', stat);
-
 				const bonusInfo = statBonusMap[stat];
 
 				const statBonus       = this.stats[bonusInfo[0]] * 3,
@@ -113,24 +107,20 @@ export class Hero extends Typegoose {
 					[stat]: [newCurrentValue, newMaxValue]
 				});
 			});
+			//endregion
 
-			this.calculated = calc;
+			//region Backstory traits
+			const backstory = BackstoriesDict[this.backstoryID];
+
+			if (backstory && backstory.traits) {
+				calc.traits = calc.traits.concat(backstory.traits);
+			}
+			//endregion
+
+			this.$calculated = calc;
 		} catch (err) {
 			console.log('calc err', err);
 			return null;
 		}
 	};
 }
-
-export const Heroes = new Hero().getModelForClass(Hero, {
-	existingMongoose: MongooseInstance,
-	schemaOptions:    {
-		collection: 'heroes',
-		minimize:   false,
-		toObject:   {
-			getters: true,
-			virtuals: true,
-			minimize: false
-		}
-	}
-});

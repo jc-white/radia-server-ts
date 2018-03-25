@@ -1,10 +1,10 @@
 import {PlayerSocket} from './player-socket.interface';
 
 export class Player {
-	userID: string;
+	userID: number;
 	socket: PlayerSocket;
 
-	constructor(userID: string, socket: PlayerSocket) {
+	constructor(userID: number, socket: PlayerSocket) {
 		Object.assign(this, {
 			userID: userID,
 			socket: socket
