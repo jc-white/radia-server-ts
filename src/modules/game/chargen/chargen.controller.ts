@@ -1,11 +1,11 @@
 import {Body, Controller, Get, Post, Put, Req, Res} from '@nestjs/common';
+import {Utils} from '../../../shared/functions/utils';
 import {BackstoriesDict} from '../dicts/backstories.dict';
 import {ChargenService} from './chargen.service';
 import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
 import {HeroService} from '../services/hero.service';
 import {TraitsDictionary} from '../../../shared/dicts/traits.dict';
 import * as _ from 'lodash';
-import {isNumeric} from '../../../shared/functions/utils';
 
 @Controller('chargen')
 export class ChargenController {
@@ -37,7 +37,7 @@ export class ChargenController {
 			return fail('A hero name is required.');
 		}
 
-		if (!isNumeric(formData.gender) || ([1, 2].indexOf(formData.gender) == -1)) {
+		if (!Utils.isNumeric(formData.gender) || ([1, 2].indexOf(formData.gender) == -1)) {
 			return fail('Invalid gender selected.');
 		}
 

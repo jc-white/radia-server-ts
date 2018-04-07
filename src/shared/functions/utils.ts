@@ -1,3 +1,35 @@
-export function isNumeric(n) {
-	return !isNaN(parseFloat(n)) && isFinite(n);
-}
+import * as moment from 'moment';
+import * as _ from 'lodash';
+
+export const Utils = {
+	isValidDate: function(string, format) {
+		if (_.isEmpty(string)) return false;
+
+		return moment(string, format).isValid();
+	},
+
+	isNumeric(n) {
+		return !isNaN(parseFloat(n)) && isFinite(n);
+	},
+
+	isValidStringOrInteger: function(input: any) {
+		if (_.isInteger(input)) return true;
+		if (_.isEmpty(input)) return false;
+		if (_.isNull(input)) return false;
+		if (_.isString(input)) return true;
+
+		return false;
+	},
+
+	convertBoolsToBinary(obj: {}) {
+		const newObj = _.cloneDeep(obj);
+
+		Object.keys(newObj).forEach(field => {
+			if (typeof newObj[field] == "boolean") {
+				newObj[field] = !!newObj[field] ? 1 : 0;
+			}
+		});
+
+		return newObj;
+	}
+};

@@ -3,9 +3,11 @@ import {
 	WebSocketServer
 } from '@nestjs/websockets';
 import {DBService} from '../modules/db/db.service';
+import {Party} from '../modules/game/models/party/party.model';
 import {HeroService} from '../modules/game/services/hero.service';
 import {PacketService} from '../modules/game/services/packet.service';
 import {PacketHeroUpdate} from './packets/heroes/heroes.packets';
+import {PacketPartyUpdate} from './packets/parties/parties.packets';
 import {PlayerSocket} from './player-socket.interface';
 import {GameSocketAuthMiddleware} from './socket-auth.middleware';
 import {PlayerService} from '../modules/game/services/player.service';
@@ -56,10 +58,13 @@ export class GameSocketGateway implements OnGatewayConnection, OnGatewayDisconne
 			if (heroCount.count == 0) {
 				sender.emit('redirect', 'game/new');
 			} else {
-				const heroes = await HeroService.getHeroes(sender.userID, true),
-				      pack   = new PacketHeroUpdate(heroes);
+				const heroes          = await HeroService.getHeroes(sender.userID, true),
+				      party           = await Party.getByUserID(sender.userID),
+				      heroUpdatePack  = new PacketHeroUpdate(heroes),
+				      partyUpdatePack = new PacketPartyUpdate(party);
 
-				PacketService.sendPacket(player, pack);
+				PacketService.sendPacket(player, heroUpdatePack);
+				PacketService.sendPacket(player, partyUpdatePack);
 			}
 		} catch (err) {
 			console.log(err);
