@@ -6,15 +6,22 @@ export interface IInventory {
 	}
 }
 
+export interface IPartyResources {
+	gold: number;
+	wood: number;
+	meals: number;
+}
+
 export class Party extends Model {
 	static tableName: string = 'parties';
 	static idColumn: string  = 'partyID';
 
 	partyID: number;
 	userID: string;
-	inventory: IInventory = {
+	inventory: IInventory               = {
 		items: {}
 	};
+	resources: Partial<IPartyResources> = {};
 	maxWeight: number;
 	map: string;
 	posX: number;
