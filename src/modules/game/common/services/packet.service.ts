@@ -1,5 +1,5 @@
-import {GamePacket} from '../../../socket/packets/game-packet.interface';
-import {Player} from '../../../socket/player.class';
+import {GamePacket} from '../../../../socket/packets/game-packet.interface';
+import {Player} from '../../../../socket/player.class';
 
 export class PacketService {
 	constructor() {

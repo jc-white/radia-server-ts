@@ -1,10 +1,10 @@
 import {Body, Controller, Get, Post, Put, Req, Res} from '@nestjs/common';
 import {Utils} from '../../../shared/functions/utils';
-import {BackstoriesDict} from '../dicts/backstories.dict';
+import {BackstoriesDict} from '../common/dicts/backstories.dict';
 import {ChargenService} from './chargen.service';
-import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
-import {HeroService} from '../services/hero.service';
-import {TraitsDictionary} from '../../../shared/dicts/traits.dict';
+import {IChargenFormData} from './chargen.interface';
+import {HeroService} from '../common/services/hero.service';
+import {TraitsDictionary} from '../common/dicts/traits.dict';
 import * as _ from 'lodash';
 
 @Controller('chargen')

@@ -1,8 +1,8 @@
 import {Component, Global, OnModuleInit} from '@nestjs/common';
-import {DBService} from '../../db/db.service';
-import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
+import {DBService} from '../../../db/db.service';
+import {IChargenFormData} from '../../chargen/chargen.interface';
 import {PacketService} from './packet.service';
-import {PacketHeroUpdate} from '../../../socket/packets/heroes/heroes.packets';
+import {PacketHeroUpdate} from '../../../../socket/packets/heroes/heroes.packets';
 import {PlayerService} from './player.service';
 import {Hero} from '../models/hero/hero.model';
 

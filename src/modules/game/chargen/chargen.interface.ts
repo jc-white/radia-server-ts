@@ -1,4 +1,4 @@
-import {EGender} from '../../models/hero/hero-misc.enum';
+import {EGender} from '../common/interfaces/hero/hero-misc.enum';
 
 export interface IChargenFormData {
 	name?: string;

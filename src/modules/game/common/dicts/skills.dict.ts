@@ -1,4 +1,4 @@
-import {ISkillList} from '../models/skills/skills.interface';
+import {ISkillList} from '../interfaces/skills/skills.interface';
 
 export const SkillsDictionary: ISkillList = {
 	casting: {

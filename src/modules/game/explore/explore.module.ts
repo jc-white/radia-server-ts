@@ -1,15 +1,16 @@
 import {Module} from '@nestjs/common';
-import {WorldmapController} from './worldmap.controller';
 import {TiledService} from './tiled.service';
+import {ExploreGateway} from './explore.gateway';
 
 @Module({
 	controllers: [
-		WorldmapController
+
 	],
 	components: [
-		TiledService
+		TiledService,
+		ExploreGateway
 	]
 })
-export class WorldmapModule {
+export class ExploreModule {
 
 }

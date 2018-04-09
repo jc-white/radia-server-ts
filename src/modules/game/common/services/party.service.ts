@@ -1,6 +1,6 @@
 import {Component, OnModuleInit} from '@nestjs/common';
-import {PacketPartyUpdate} from '../../../socket/packets/parties/parties.packets';
-import {DBService} from '../../db/db.service';
+import {PacketPartyUpdate} from '../../../../socket/packets/parties/parties.packets';
+import {DBService} from '../../../db/db.service';
 import {Party} from '../models/party/party.model';
 import {PacketService} from './packet.service';
 import {PlayerService} from './player.service';

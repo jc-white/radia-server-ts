@@ -1,6 +1,6 @@
 import {Component} from '@nestjs/common';
-import {IChargenFormData} from '../../../shared/interfaces/chargen/chargen.interface';
-import {Hero} from '../models/hero/hero.model';
+import {IChargenFormData} from './chargen.interface';
+import {Hero} from '../common/models/hero/hero.model';
 
 @Component()
 export class ChargenService {

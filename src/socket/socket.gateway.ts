@@ -1,39 +1,28 @@
 import {
-	OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway,
-	WebSocketServer
+	OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway
 } from '@nestjs/websockets';
 import {DBService} from '../modules/db/db.service';
-import {Party} from '../modules/game/models/party/party.model';
-import {HeroService} from '../modules/game/services/hero.service';
-import {PacketService} from '../modules/game/services/packet.service';
+import {Party} from '../modules/game/common/models/party/party.model';
+import {HeroService} from '../modules/game/common/services/hero.service';
+import {PacketService} from '../modules/game/common/services/packet.service';
 import {PacketHeroUpdate} from './packets/heroes/heroes.packets';
 import {PacketPartyUpdate} from './packets/parties/parties.packets';
 import {PlayerSocket} from './player-socket.interface';
-import {GameSocketAuthMiddleware} from './socket-auth.middleware';
-import {PlayerService} from '../modules/game/services/player.service';
-
-const sharedSession = require('express-socket.io-session');
+import {RootGateway} from './root-gateway.class';
+import {PlayerService} from '../modules/game/common/services/player.service';
 
 @WebSocketGateway({
 	port:        5050,
-	middlewares: [GameSocketAuthMiddleware]
+	namespace:   'main'
 })
-export class GameSocketGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
-	static sessionHandler: any;
-
-	@WebSocketServer()
-	private server: any;
-
+export class GameSocketGateway extends RootGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
 	constructor(private playerService: PlayerService, private dbService: DBService) {
-
+		super();
 	}
 
-	afterInit(server: any) {
-		console.log('Socket server started');
-
-		this.server.use(sharedSession(GameSocketGateway.sessionHandler, {
-			autoSave: true
-		}));
+	afterInit() {
+		super.afterInit();
+		console.log('Main gateway init');
 	}
 
 	handleConnection(client: PlayerSocket) {

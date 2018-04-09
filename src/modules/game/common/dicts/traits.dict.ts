@@ -1,4 +1,4 @@
-import {ITrait, ITraitList} from '../models/traits/traits.interface';
+import {ITrait, ITraitList} from '../interfaces/traits/traits.interface';
 
 export const TraitsDictionary: Array<ITrait> = [
 	{

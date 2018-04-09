@@ -23,7 +23,7 @@ export class Party extends Model {
 	};
 	resources: Partial<IPartyResources> = {};
 	maxWeight: number;
-	map: string;
+	mapID: string;
 	posX: number;
 	posY: number;
 

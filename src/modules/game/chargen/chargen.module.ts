@@ -1,5 +1,5 @@
 import {Module} from '@nestjs/common';
-import {HeroService} from '../services/hero.service';
+import {HeroService} from '../common/services/hero.service';
 import {ChargenService} from './chargen.service';
 import {ChargenController} from './chargen.controller';
 

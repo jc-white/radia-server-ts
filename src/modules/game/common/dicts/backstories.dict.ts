@@ -1,4 +1,4 @@
-import {IBackstory} from '../../../shared/models/hero/hero.interface';
+import {IBackstory} from '../interfaces/hero/hero.interface';
 
 
 export const BackstoriesDict: {

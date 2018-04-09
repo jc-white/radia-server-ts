@@ -1,6 +1,6 @@
 import {Model} from 'objection';
-import {EGender} from '../../../../shared/models/hero/hero-misc.enum';
-import {IStatList} from '../../../../shared/models/hero/stats.interface';
+import {EGender} from '../../interfaces/hero/hero-misc.enum';
+import {IStatList} from '../../interfaces/hero/stats.interface';
 import {BackstoriesDict} from '../../dicts/backstories.dict';
 
 export interface ICalculatedHeroFields {

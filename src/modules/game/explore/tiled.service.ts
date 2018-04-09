@@ -22,34 +22,35 @@ export class TiledTileMap {
 	version: number;
 	width: number;
 
-	tiles: ITileGrid = {};
+	tiles: ITileGrid = [];
 
 	constructor(tileMapID: string, tileMapData: TiledTileMap) {
 		Object.assign(this, tileMapData);
 		this.tileMapID = tileMapID;
 
 		if (this.layers && this.layers.length) {
-			const chunks          = [],
-			      grid: ITileGrid = {};
+			const layerGrids              = [],
+			      combinedGrid: ITileGrid = [];
 
-			this.layers.forEach((layer, index) => {
+			this.layers.filter(layer => layer.type == 'tilelayer').forEach((layer, index) => {
 				this.layers[index] = new TiledLayer(layer);
 
-				chunks.push(this.layers[index].chunkRows(this.width, this.height));
+				layerGrids.push(this.layers[index].asGrid(this.width));
 			});
 
-			chunks.forEach(chunk => {
+			layerGrids.forEach(grid => {
 				for (let x = 0; x < this.width; x++) {
-					for (let y = 0; y < this.height; y++) {
-						if (!grid[x]) grid[x] = {};
-						if (!grid[x][y]) grid[x][y] = [];
+					if (!combinedGrid[x]) combinedGrid[x] = [];
 
-						grid[x][y].push(chunk[x][y]);
+					for (let y = 0; y < this.height; y++) {
+						if (!combinedGrid[x][y]) combinedGrid[x][y] = [];
+
+						combinedGrid[x][y].push(grid[x][y]);
 					}
 				}
 			});
 
-			this.tiles = grid;
+			this.tiles = combinedGrid;
 		}
 
 		if (this.tilesets && this.tilesets.length) {
@@ -108,17 +109,17 @@ export class TiledLayer {
 		}
 	}
 
-	chunkRows(width: number, height: number) {
-		const grid = {};
+	asGrid(width: number) {
+		const grid = [];
 		const rows = _.chunk(this.data, width);
 
-		for (let x = 0; x < width; x++) {
-			for (let y = 0; y < height; y++) {
-				if (!grid[x]) grid[x] = {};
+		rows.forEach((row, y) => {
+			for (let x = 0; x < width; x++) {
+				if (!grid[x]) grid[x] = [];
 
-				grid[x][y] = rows[x][y];
+				grid[x][y] = row[x];
 			}
-		}
+		});
 
 		return grid;
 	}
@@ -182,7 +183,7 @@ export class TiledTile {
 	}
 }
 
-export interface ITileGrid {
+export interface ITileGrid extends Array<any> {
 	[x: number]: {
 		[y: number]: Array<number>;
 	}

@@ -4,9 +4,7 @@ import cookieParser = require('cookie-parser');
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as passport from 'passport';
-import {DBService} from './modules/db/db.service';
-import {Hero} from './modules/game/models/hero/hero.model';
-import {GameSocketGateway} from './socket/socket.gateway';
+import {CustomIoAdapter} from './socket/io-adapter';
 import {Strategy as LocalStrategy} from 'passport-local';
 import {AuthService} from './modules/auth/auth.service';
 import {User} from './modules/auth/user.model';
@@ -110,7 +108,9 @@ async function bootstrap() {
 	console.log('Session');
 	app.use(passport.session());
 
-	GameSocketGateway.sessionHandler = sessionHandler;
+	CustomIoAdapter.sessionHandler = sessionHandler;
+
+	app.useWebSocketAdapter(new CustomIoAdapter());
 
 	app.listen(3000, () => console.log('App listening'));
 }
