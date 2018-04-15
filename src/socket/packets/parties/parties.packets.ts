@@ -6,3 +6,9 @@ export class PacketPartyUpdate extends GamePacket<Party> {
 		super('party', 'partyUpdate', party);
 	}
 }
+
+export class PacketSetFatigue extends GamePacket<number> {
+	constructor(fatigueValue: number) {
+		super('party', 'setFatigue', fatigueValue);
+	}
+}

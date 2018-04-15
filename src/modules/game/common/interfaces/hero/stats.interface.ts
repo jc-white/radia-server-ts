@@ -5,3 +5,5 @@ export interface IStatList {
 	con: number;
 	luk: number;
 }
+
+export type VitTypes = 'health' | 'mana' | 'stamina';

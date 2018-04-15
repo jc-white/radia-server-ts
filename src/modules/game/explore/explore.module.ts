@@ -12,5 +12,10 @@ import {ExploreGateway} from './explore.gateway';
 	]
 })
 export class ExploreModule {
+	constructor(private tiledService: TiledService) {
+		(async () => {
+			const tilemap = await tiledService.getTilemap('test');
+		})();
 
+	}
 }

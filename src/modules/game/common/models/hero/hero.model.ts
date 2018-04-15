@@ -1,6 +1,6 @@
 import {Model} from 'objection';
 import {EGender} from '../../interfaces/hero/hero-misc.enum';
-import {IStatList} from '../../interfaces/hero/stats.interface';
+import {IStatList, VitTypes} from '../../interfaces/hero/stats.interface';
 import {BackstoriesDict} from '../../dicts/backstories.dict';
 
 export interface ICalculatedHeroFields {
@@ -122,5 +122,58 @@ export class Hero extends Model {
 			console.log('calc err', err);
 			return null;
 		}
-	};
+	}
+
+	getCurrentVit(type: VitTypes) {
+		return this.vitality[type][0];
+	}
+
+	getMaxVit(type: VitTypes) {
+		return this.vitality[type][1];
+	}
+
+	getVitPct(type: VitTypes) {
+		return this.getCurrentVit(type) / this.getMaxVit(type);
+	}
+
+	setCurrentVit(type: VitTypes, value: number) {
+		this.vitality[type][0] = Math.min(value, this.getMaxVit(type));
+	}
+
+	setVitPct(type: VitTypes, pct: number) {
+		if (pct > 1 || pct < 0) {
+			console.error('healVitToPct: pct must be between 0 and 1');
+			return;
+		}
+
+		this.setCurrentVit(type, Math.floor(this.getMaxVit(type) * pct));
+	}
+
+	healVitToPct(type: VitTypes, pct: number) {
+		if (pct > 1 || pct < 0) {
+			console.error('healVitToPct: pct must be between 0 and 1');
+			return;
+		}
+
+		if (this.getCurrentVit(type) < Math.floor(this.getMaxVit(type) * pct)) {
+			this.setVitPct(type, pct);
+		}
+	}
+
+	healVitByPct(type: VitTypes, pct: number) {
+		if (pct > 1 || pct < 0) {
+			console.error('healVitToPct: pct must be between 0 and 1');
+			return;
+		}
+
+		this.setCurrentVit(type, this.getCurrentVit(type) + Math.floor(this.getMaxVit(type) * pct));
+	}
+
+	healVitByAmount(type: VitTypes, amount: number) {
+		this.setCurrentVit(type, this.getCurrentVit(type) + amount);
+	}
+
+	healVitToFull(type: VitTypes) {
+		this.setVitPct(type, 1);
+	}
 }

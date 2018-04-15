@@ -12,6 +12,12 @@ export class PlayerService {
 
 	}
 
+	getPlayer(userID: number) {
+		if (!this.players[userID]) return null;
+
+		return this.players[userID];
+	}
+
 	addPlayer(userID: number, socket: PlayerSocket) {
 		if (this.players[userID]) return;
 
