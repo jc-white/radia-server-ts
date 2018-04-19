@@ -8,7 +8,7 @@ import {PartyResources} from '../common/dicts/resources.dict';
 import {EPartyCurrentStatus} from '../common/models/party/party.enum';
 import {LocationService} from '../common/services/location-service.component';
 import {PacketService} from '../common/services/packet.service';
-import {PartyService} from '../common/services/party.service';
+import {PartyService} from '../party/party.service';
 import {PlayerService} from '../common/services/player.service';
 import {Forage} from './models/forage.model';
 import {TiledService} from './tiled.service';
@@ -20,13 +20,7 @@ import * as _ from 'lodash';
 })
 export class ExploreGateway extends RootGateway implements OnGatewayConnection, OnGatewayInit {
 	constructor(private playerService: PlayerService, private partyService: PartyService, private tiledService: TiledService, private locService: LocationService) {
-		super();
-	}
-
-	handleConnection(client: PlayerSocket) {
-		client.userID = client.handshake.session.passport.user;
-
-		this.playerService.addPlayer(client.userID, client);
+		super(playerService);
 	}
 
 	@SubscribeMessage('init')

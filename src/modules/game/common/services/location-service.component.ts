@@ -46,6 +46,8 @@ export class LocationService {
 	async getRegion(regionID: string | Promise<string>): Promise<Region> {
 		regionID = await Promise.resolve(regionID);
 
+		if (!regionID) return;
+
 		if (this.cache.regions[regionID]) {
 			return this.cache.regions[regionID];
 		}
@@ -93,8 +95,6 @@ export class LocationService {
 
 	async getPartyLocation(party: Party): Promise<IPartyLocation> {
 		try {
-			console.log('Finding party location', party.partyID);
-
 			const getMap    = this.getMap(party.mapID),
 			      getRegion = this.getRegionByTile(party.mapID, party.posX, party.posY);
 

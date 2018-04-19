@@ -1,6 +1,7 @@
-import {Model} from 'objection';
+import {Model, QueryContext} from 'objection';
 import {ICoordPair} from '../../../explore/interfaces/explore.interface';
 import {PartyResources} from '../../dicts/resources.dict';
+import {Item} from '../items/item.model';
 import {Region} from '../location/region.model';
 import {EPartyCurrentStatus} from './party.enum';
 
@@ -36,6 +37,10 @@ export class Party extends Model {
 
 	static getByUserID(userID: number) {
 		return this.query().where('userID', userID).first();
+	}
+
+	save() {
+		return Party.query().where('partyID', this.partyID).update(this.toJSON());
 	}
 
 	setPos(x: number, y: number) {
@@ -87,7 +92,15 @@ export class Party extends Model {
 		return this.resources[resourceName];
 	}
 
-	save() {
-		return Party.query().where('partyID', this.partyID).update(this.toJSON());
+	addItem(item: Item, quantity: number = 1) {
+
+	}
+
+	removeItem(item: Item, quantity: number = 1) {
+
+	}
+
+	hasItem(item: Item, quantity: number = 1) {
+
 	}
 }

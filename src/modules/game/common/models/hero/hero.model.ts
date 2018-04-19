@@ -58,6 +58,9 @@ export class Hero extends Model {
 		stamina: [85, 85],
 		mana:    [85, 85]
 	};
+	equipment: {
+		[slot: string]: number
+	} = {};
 
 	$calculated: ICalculatedHeroFields;
 

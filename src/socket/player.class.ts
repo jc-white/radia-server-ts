@@ -1,9 +1,10 @@
 import {Hero} from '../modules/game/common/models/hero/hero.model';
+import {Item} from '../modules/game/common/models/items/item.model';
 import {Party} from '../modules/game/common/models/party/party.model';
-import {IPartyLocation} from '../modules/game/explore/interfaces/explore.interface';
-import {Map} from '../modules/game/common/models/location/map.model';
+import {ItemService} from '../modules/game/common/services/item.service';
 import {TimedQueue} from '../shared/functions/timed-queue';
 import {PlayerSocket} from './player-socket.interface';
+import * as _ from 'lodash';
 
 export class Player {
 	userID: number;
@@ -17,10 +18,6 @@ export class Player {
 			userID: userID,
 			socket: socket
 		});
-	}
-
-	getHeroCount() {
-
 	}
 
 	async getParty(): Promise<Party> {
@@ -41,5 +38,25 @@ export class Player {
 		this.heroes = await Hero.query().where('userID', this.userID);
 
 		return this.heroes;
+	}
+
+	async getItems(): Promise<Array<Item>> {
+		if (!this.heroes) {
+			await this.getHeroes();
+		}
+
+		if (!this.party) {
+			await this.getParty();
+		}
+
+		const items: Array<any> = [
+			...Object.keys(this.party.inventory.items) || []
+		];
+
+		this.heroes.filter(hero => !_.isEmpty(hero.equipment)).forEach(hero => {
+			items.push(...Object.values(hero.equipment))
+		});
+
+		return items.length ? ItemService.getItems(items) : [];
 	}
 }

@@ -1,8 +1,22 @@
-import {OnGatewayInit, WebSocketServer} from '@nestjs/websockets';
+import {OnGatewayConnection, OnGatewayInit, WebSocketServer} from '@nestjs/websockets';
+import {PlayerService} from '../modules/game/common/services/player.service';
+import {PlayerSocket} from './player-socket.interface';
 
-export abstract class RootGateway implements OnGatewayInit {
+export abstract class RootGateway implements OnGatewayConnection, OnGatewayInit {
 	@WebSocketServer()
 	private server: any;
+
+	protected constructor(private _playerService: PlayerService) {
+
+	}
+
+	handleConnection(client: PlayerSocket) {
+		client.userID = client.handshake.session.passport.user;
+	}
+
+	addPlayer(client: PlayerSocket) {
+		this._playerService.addPlayer(client.userID, client);
+	}
 
 	afterInit() {
 		console.log('Root gateway started');
