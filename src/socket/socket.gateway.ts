@@ -23,15 +23,21 @@ export class GameSocketGateway extends RootGateway implements OnGatewayConnectio
 	handleConnection(client: PlayerSocket) {
 		super.handleConnection(client);
 
+		if (!client.userID) return;
+
 		this.playerService.addPlayer(client.userID, client);
 	}
 
 	handleDisconnect(client: PlayerSocket) {
+		if (!client.userID) return;
+
 		this.playerService.removePlayer(client.userID); //TODO: Probably put a delay on this
 	}
 
 	@SubscribeMessage('init')
 	async handleGameInit(sender: PlayerSocket, data) {
+		if (!sender.userID) return;
+
 		sender.emit('connected');
 
 		try {

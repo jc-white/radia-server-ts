@@ -11,6 +11,11 @@ export abstract class RootGateway implements OnGatewayConnection, OnGatewayInit 
 	}
 
 	handleConnection(client: PlayerSocket) {
+		if (!client.handshake.session || !client.handshake.session.passport) {
+			console.log('bad client', client);
+			return;
+		}
+
 		client.userID = client.handshake.session.passport.user;
 	}
 

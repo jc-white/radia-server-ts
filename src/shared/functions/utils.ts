@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 
 export const Utils = {
-	isValidDate: function(string, format) {
+	isValidDate: function (string, format) {
 		if (_.isEmpty(string)) return false;
 
 		return moment(string, format).isValid();
@@ -12,7 +12,7 @@ export const Utils = {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	},
 
-	isValidStringOrInteger: function(input: any) {
+	isValidStringOrInteger: function (input: any) {
 		if (_.isInteger(input)) return true;
 		if (_.isEmpty(input)) return false;
 		if (_.isNull(input)) return false;
@@ -31,5 +31,29 @@ export const Utils = {
 		});
 
 		return newObj;
+	},
+
+	getMatches(str, regex) {
+		let matches = [];
+		let match;
+
+		if (regex.global) {
+			regex.lastIndex = 0;
+		} else {
+			regex = new RegExp(regex.source, 'g' +
+				(regex.ignoreCase ? 'i' : '') +
+				(regex.multiline ? 'm' : '') +
+				(regex.sticky ? 'y' : ''));
+		}
+
+		while (match = regex.exec(str)) {
+			matches.push(match);
+
+			if (regex.lastIndex === match.index) {
+				regex.lastIndex++;
+			}
+		}
+
+		return matches;
 	}
 };
