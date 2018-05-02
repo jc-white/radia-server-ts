@@ -30,6 +30,14 @@ export class Player {
 		return this.party;
 	}
 
+	updateParty(party: Party) {
+		if (this.party) {
+			Object.assign(this.party, party);
+		} else {
+			this.party = party;
+		}
+	}
+
 	async getHeroes(): Promise<Array<Hero>> {
 		if (this.heroes) {
 			return this.heroes;
@@ -38,6 +46,26 @@ export class Player {
 		this.heroes = await Hero.query().where('userID', this.userID);
 
 		return this.heroes;
+	}
+
+	getHeroByID(heroID: number) {
+		const index = this.heroes.findIndex(h => h.heroID == heroID);
+
+		if (index > -1) {
+			return this.heroes[index];
+		}
+
+		return null;
+	}
+
+	updateHero(hero: Hero) {
+		const index = this.heroes.findIndex(h => h.heroID == hero.heroID);
+
+		if (index > -1) {
+			Object.assign(this.heroes[index], hero);
+		} else {
+			this.heroes.push(hero);
+		}
 	}
 
 	async getItems(): Promise<Array<Item>> {

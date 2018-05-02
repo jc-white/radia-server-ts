@@ -1,7 +1,9 @@
 import {Model} from 'objection';
 import {EGender} from '../../interfaces/hero/hero-misc.enum';
+import {IEquipment} from '../../interfaces/hero/hero.interface';
 import {IStatList, VitTypes} from '../../interfaces/hero/stats.interface';
 import {BackstoriesDict} from '../../dicts/backstories.dict';
+import {ItemService} from '../../services/item.service';
 
 export interface ICalculatedHeroFields {
 	vitality: {
@@ -28,21 +30,21 @@ export class Hero extends Model {
 		return json;
 	}
 
-	$afterGet() {
-		this.calc();
+	async $afterGet() {
+		await this.calc();
 	}
 
-	heroID: number        = void 0;
-	userID: number        = null;
-	name: string          = null;
-	gender: EGender       = 1;
-	level: number         = 1;
-	backstoryID: string   = null;
-	traits: Array<string> = [];
+	heroID: number                 = void 0;
+	userID: number                 = null;
+	name: string                   = null;
+	gender: EGender                = 1;
+	level: number                  = 1;
+	backstoryID: string            = null;
+	traits: Array<string>          = [];
 	skills: {
 		[skillName: string]: number;
-	}                     = {};
-	stats: IStatList      = {
+	}                              = {};
+	stats: IStatList               = {
 		str: 5,
 		int: 5,
 		dex: 5,
@@ -53,14 +55,12 @@ export class Hero extends Model {
 		health: [number, number],
 		stamina: [number, number],
 		mana: [number, number]
-	}                     = {
+	}                              = {
 		health:  [85, 85],
 		stamina: [85, 85],
 		mana:    [85, 85]
 	};
-	equipment: {
-		[slot: string]: number
-	} = {};
+	equipment: Partial<IEquipment> = {};
 
 	$calculated: ICalculatedHeroFields;
 
@@ -68,11 +68,11 @@ export class Hero extends Model {
 		return this.$calculated;
 	}
 
-	constructor(isDummy: boolean = false) {
+	constructor() {
 		super();
 	}
 
-	calc() {
+	async calc() {
 		try {
 			const calc: ICalculatedHeroFields = {
 				vitality: {
@@ -110,6 +110,22 @@ export class Hero extends Model {
 					[stat]: [newCurrentValue, newMaxValue]
 				});
 			});
+			//endregion
+
+			//region Basic stats
+			Object.assign(calc.stats, this.stats);
+
+			if (this.equipment && Object.values(this.equipment).length) {
+				const items = await ItemService.getItems(Object.values(this.equipment));
+
+				items.forEach(item => {
+					if (item.stats) {
+						Object.keys(item.stats).forEach(stat => {
+							calc.stats[stat] += item.stats[stat];
+						});
+					}
+				});
+			}
 			//endregion
 
 			//region Backstory traits

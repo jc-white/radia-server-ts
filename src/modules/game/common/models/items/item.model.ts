@@ -40,5 +40,8 @@ export class Item extends Model {
 				}
 			});
 		}
+
+		//Cast the itemID to an int, since it comes as a string from Postgres
+		this.itemID = parseInt(this.itemID as any, 10);
 	}
 }
