@@ -93,14 +93,30 @@ export class Party extends Model {
 	}
 
 	addItem(item: Item, quantity: number = 1) {
+		const itemID = item.itemID.toString();
 
+		if (this.inventory.items[itemID]) {
+			this.inventory.items[itemID] += quantity;
+		} else {
+			this.inventory.items[itemID] = quantity;
+		}
 	}
 
 	removeItem(item: Item, quantity: number = 1) {
+		if (!this.hasItem(item, quantity)) return false;
 
+		const itemID = item.itemID.toString();
+
+		this.inventory.items[itemID] -= quantity;
+
+		if (this.inventory.items[itemID] <= 0) {
+			delete this.inventory.items[itemID];
+		}
 	}
 
 	hasItem(item: Item, quantity: number = 1) {
+		const itemID = item.itemID.toString();
 
+		return Object.keys(this.inventory.items).includes(itemID) && this.inventory.items[itemID] >= quantity;
 	}
 }

@@ -1,5 +1,5 @@
 import {Component} from '@nestjs/common';
-import {PacketItem} from '../../../../socket/packets/parties/parties.packets';
+import {PacketSendItem} from '../../../../socket/packets/parties/parties.packets-send';
 import {Player} from '../../../../socket/player.class';
 import {Item} from '../models/items/item.model';
 import * as _ from 'lodash';
@@ -97,7 +97,7 @@ export class ItemService {
 			return;
 		}
 
-		const packet = new PacketItem(item);
+		const packet = new PacketSendItem(item);
 
 		PacketService.sendPacket(player, packet);
 	}

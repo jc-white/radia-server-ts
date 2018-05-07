@@ -4,7 +4,7 @@ import {DBService} from '../../../db/db.service';
 import {IChargenFormData} from '../../chargen/chargen.interface';
 import {ItemService} from './item.service';
 import {PacketService} from './packet.service';
-import {PacketHeroUpdate} from '../../../../socket/packets/heroes/heroes.packets';
+import {PacketSendHeroUpdate} from '../../../../socket/packets/heroes/heroes.packets';
 import {PlayerService} from './player.service';
 import {Hero} from '../models/hero/hero.model';
 import * as _ from 'lodash';
@@ -51,7 +51,7 @@ export class HeroService implements OnModuleInit {
 				}
 			}
 
-			PacketService.sendPacket(player, new PacketHeroUpdate([hero]));
+			PacketService.sendPacket(player, new PacketSendHeroUpdate([hero]));
 
 			player.updateHero(hero);
 		}

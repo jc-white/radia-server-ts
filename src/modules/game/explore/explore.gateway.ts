@@ -1,7 +1,7 @@
 import {OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway} from '@nestjs/websockets';
 import {WeightedList} from '../../../shared/functions/weighted';
-import {PacketLoadMap, PacketMoveSuccess} from '../../../socket/packets/explore/explore.packets';
-import {PacketSetFatigue} from '../../../socket/packets/parties/parties.packets';
+import {PacketSendLoadMap, PacketSendMoveSuccess} from '../../../socket/packets/explore/explore.packets';
+import {PacketSendSetFatigue} from '../../../socket/packets/parties/parties.packets-send';
 import {PlayerSocket} from '../../../socket/player-socket.interface';
 import {RootGateway} from '../../../socket/root-gateway.class';
 import {PartyResources} from '../common/dicts/resources.dict';
@@ -49,7 +49,7 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 				party.setCurrentRegion(region);
 			}
 
-			PacketService.sendPacket(player, new PacketLoadMap({
+			PacketService.sendPacket(player, new PacketSendLoadMap({
 				id:      map.mapID,
 				tileset: map.tileset
 			}));
@@ -122,10 +122,10 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 								}
 
 								party.setPos(path[i].x, path[i].y);
-								PacketService.sendPacket(player, new PacketMoveSuccess([path[i]]));
+								PacketService.sendPacket(player, new PacketSendMoveSuccess([path[i]]));
 
 								party.addFatigue(2);
-								PacketService.sendPacket(player, new PacketSetFatigue(party.fatigue));
+								PacketService.sendPacket(player, new PacketSendSetFatigue(party.fatigue));
 							}
 						},
 						tags:  ['explore', 'travel']
@@ -213,7 +213,7 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 						PacketService.sendMessage(player, `... zZzZz ...`);
 
 						party.removeFatigue(10);
-						PacketService.sendPacket(player, new PacketSetFatigue(party.fatigue));
+						PacketService.sendPacket(player, new PacketSendSetFatigue(party.fatigue));
 					},
 					tags:  ['explore', 'camp']
 				});
@@ -278,7 +278,7 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 							PacketService.sendMessage(player, `<i>rustle rustle</i>`);
 
 							party.addFatigue(1);
-							PacketService.sendPacket(player, new PacketSetFatigue(party.fatigue));
+							PacketService.sendPacket(player, new PacketSendSetFatigue(party.fatigue));
 						}
 					},
 					tags:  ['explore', 'forage']

@@ -1,5 +1,5 @@
 import {Component, OnModuleInit} from '@nestjs/common';
-import {PacketPartyUpdate} from '../../../socket/packets/parties/parties.packets';
+import {PacketSendPartyUpdate} from '../../../socket/packets/parties/parties.packets-send';
 import {Player} from '../../../socket/player.class';
 import {DBService} from '../../db/db.service';
 import {Party} from '../common/models/party/party.model';
@@ -25,7 +25,7 @@ export class PartyService implements OnModuleInit {
 		const player: Player = this.playerService.players[party.userID];
 
 		if (player && !_.isEqual(party, player.party)) {
-			PacketService.sendPacket(player, new PacketPartyUpdate(party));
+			PacketService.sendPacket(player, new PacketSendPartyUpdate(party));
 
 			player.updateParty(party);
 		}

@@ -4,6 +4,7 @@ import {IEquipment} from '../../interfaces/hero/hero.interface';
 import {IStatList, VitTypes} from '../../interfaces/hero/stats.interface';
 import {BackstoriesDict} from '../../dicts/backstories.dict';
 import {ItemService} from '../../services/item.service';
+import {EquipSlot, Item} from '../items/item.model';
 
 export interface ICalculatedHeroFields {
 	vitality: {
@@ -66,10 +67,6 @@ export class Hero extends Model {
 
 	get calculated() {
 		return this.$calculated;
-	}
-
-	constructor() {
-		super();
 	}
 
 	async calc() {
@@ -143,6 +140,11 @@ export class Hero extends Model {
 		}
 	}
 
+	save() {
+		return Hero.query().where('heroID', this.heroID).update(this.toJSON());
+	}
+
+	//region Vitality
 	getCurrentVit(type: VitTypes) {
 		return this.vitality[type][0];
 	}
@@ -195,4 +197,15 @@ export class Hero extends Model {
 	healVitToFull(type: VitTypes) {
 		this.setVitPct(type, 1);
 	}
+	//endregion
+
+	//region Equipment
+	getItemIDInSlot(slot: EquipSlot): number {
+		return this.equipment[slot];
+	}
+
+	equipItem(item: Item, slot: EquipSlot) {
+		this.equipment[slot] = item.itemID;
+	}
+	//endregion
 }
