@@ -1,6 +1,9 @@
 import {OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway} from '@nestjs/websockets';
 import {PacketSendHeroUpdate} from '../../../socket/packets/heroes/heroes.packets';
-import {PacketReceiveEquipItem} from '../../../socket/packets/parties/parties.packets-receive';
+import {
+	PacketReceiveEquipItem,
+	PacketReceiveUnequipItem, PacketReceiveUseItem
+} from '../../../socket/packets/parties/parties.packets-receive';
 import {
 	PacketSendItems,
 	PacketSendPartyUpdate
@@ -57,7 +60,7 @@ export class PartyGateway extends RootGateway implements OnGatewayConnection, On
 
 			console.log('Equip packet', packet);
 
-			const [hero, party]: [Hero, Party] = await Promise.all([player.getHeroByID(packet.heroID), player.getParty()]),
+			const [hero, party]: [Hero, Party] = await Promise.all([await player.getHeroByID(packet.heroID), player.getParty()]),
 			      item                         = await ItemService.getItem(packet.itemID);
 
 			if (!hero) {
@@ -88,7 +91,7 @@ export class PartyGateway extends RootGateway implements OnGatewayConnection, On
 				party.addItem(await ItemService.getItem(equippedItem));
 			}
 
-			hero.equipItem(item, packet.slot);
+			hero.setEquipSlot(item, packet.slot);
 
 			console.log('Item equipped');
 
@@ -96,5 +99,51 @@ export class PartyGateway extends RootGateway implements OnGatewayConnection, On
 		} catch (error) {
 			console.log('handleEquipItem error', error);
 		}
+	}
+
+	@SubscribeMessage('unequipItem')
+	async handleUnequipItem(sender: PlayerSocket, packet: PacketReceiveUnequipItem) {
+		try {
+			if (!sender || !sender.userID) return;
+
+			const player = this.playerService.players[sender.userID];
+
+			if (!player) return;
+
+			console.log('Unequip packet', packet);
+
+			const [hero, party]: [Hero, Party] = await Promise.all([await player.getHeroByID(packet.heroID), player.getParty()]);
+
+			const itemID = hero.getItemIDInSlot(packet.slot);
+
+			if (!hero) {
+				console.warn('Tried to equip item on invalid hero: ' + packet.heroID);
+				return;
+			}
+
+			if (!itemID) {
+				console.warn('Tried to unequip empty slot: ' + packet.slot);
+				return;
+			}
+
+			const item = await ItemService.getItem(itemID);
+
+			if (!item) {
+				console.warn('Tried to unequip invalid item: ' + itemID);
+				return;
+			}
+
+			hero.unsetEquipSlot(packet.slot);
+			party.addItem(item);
+
+			await Promise.all([hero.save(), party.save()]);
+		} catch (error) {
+			console.log('handleUnequipItem error', error, error.stack);
+		}
+	}
+
+	@SubscribeMessage('useItem')
+	async handleUseItem(sender: PlayerSocket, packet: PacketReceiveUseItem) {
+
 	}
 }

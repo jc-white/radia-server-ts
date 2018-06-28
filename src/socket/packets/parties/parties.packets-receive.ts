@@ -5,3 +5,13 @@ export interface PacketReceiveEquipItem {
 	heroID: number;
 	slot: EquipSlot;
 }
+
+export interface PacketReceiveUnequipItem {
+	heroID: number;
+	slot: EquipSlot;
+}
+
+export interface PacketReceiveUseItem {
+	itemID: number;
+	heroID?: number;
+}

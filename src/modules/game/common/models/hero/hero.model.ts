@@ -204,8 +204,12 @@ export class Hero extends Model {
 		return this.equipment[slot];
 	}
 
-	equipItem(item: Item, slot: EquipSlot) {
+	setEquipSlot(item: Item, slot: EquipSlot) {
 		this.equipment[slot] = item.itemID;
+	}
+
+	unsetEquipSlot(slot: EquipSlot) {
+		this.equipment[slot] = undefined;
 	}
 	//endregion
 }

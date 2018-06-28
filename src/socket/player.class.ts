@@ -39,16 +39,22 @@ export class Player {
 	}
 
 	async getHeroes(): Promise<Array<Hero>> {
-		if (this.heroes) {
+		if (this.heroes && this.heroes.length) {
 			return this.heroes;
 		}
 
-		this.heroes = await Hero.query().where('userID', this.userID);
+		this.heroes = await Hero.query()
+			.where('userID', this.userID)
+			.orderBy('heroID', 'ASC');
 
 		return this.heroes;
 	}
 
-	getHeroByID(heroID: number) {
+	async getHeroByID(heroID: number) {
+		if (!this.heroes || !this.heroes.length) {
+			await this.getHeroes();
+		}
+
 		const index = this.heroes.findIndex(h => h.heroID == heroID);
 
 		if (index > -1) {
@@ -58,7 +64,11 @@ export class Player {
 		return null;
 	}
 
-	updateHero(hero: Hero) {
+	async updateHero(hero: Hero) {
+		if (!this.heroes || !this.heroes.length) {
+			await this.getHeroes();
+		}
+
 		const index = this.heroes.findIndex(h => h.heroID == hero.heroID);
 
 		if (index > -1) {
@@ -69,7 +79,7 @@ export class Player {
 	}
 
 	async getItems(): Promise<Array<Item>> {
-		if (!this.heroes) {
+		if (!this.heroes || !this.heroes.length) {
 			await this.getHeroes();
 		}
 

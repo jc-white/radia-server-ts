@@ -1,4 +1,4 @@
-import {Component, Global, OnModuleInit} from '@nestjs/common';
+import {Component, OnModuleInit} from '@nestjs/common';
 import {Player} from '../../../../socket/player.class';
 import {DBService} from '../../../db/db.service';
 import {IChargenFormData} from '../../chargen/chargen.interface';
@@ -40,7 +40,8 @@ export class HeroService implements OnModuleInit {
 
 		if (player) {
 			//Check if any items need to be sent to the client
-			const existingHero = player.getHeroByID(hero.heroID);
+			const existingHero = await player.getHeroByID(hero.heroID);
+
 			if (existingHero) {
 				if (hero.equipment && !_.isEqual(hero.equipment, existingHero.equipment)) {
 					const newItems = _.difference(Object.values(hero.equipment), Object.values(existingHero.equipment));
