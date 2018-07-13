@@ -27,7 +27,7 @@ export class ItemService {
 
 	}
 
-	static async getItem(itemID: number) {
+	static async getItem(itemID: number): Promise<Item> {
 		//Cast itemID to int since sometimes they come as strings directly from Postgres
 		itemID = parseInt(itemID as any);
 
@@ -47,7 +47,7 @@ export class ItemService {
 		return ItemService.cache.get(item.itemID);
 	}
 
-	static async getItems(itemIDs: Array<number>) {
+	static async getItems(itemIDs: Array<number>): Promise<Array<Item>> {
 		//Cast itemIDs to int since sometimes they come as strings directly from Postgres
 		itemIDs = itemIDs.map(i => parseInt(i as any));
 

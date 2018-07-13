@@ -1,6 +1,7 @@
 import {OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway} from '@nestjs/websockets';
 import {PacketSendHeroUpdate} from '../../../socket/packets/heroes/heroes.packets';
 import {
+	PacketReceiveDiscardItem,
 	PacketReceiveEquipItem,
 	PacketReceiveUnequipItem, PacketReceiveUseItem
 } from '../../../socket/packets/parties/parties.packets-receive';
@@ -10,6 +11,8 @@ import {
 } from '../../../socket/packets/parties/parties.packets-send';
 import {PlayerSocket} from '../../../socket/player-socket.interface';
 import {RootGateway} from '../../../socket/root-gateway.class';
+import {VitTypes} from '../common/interfaces/hero/stats.interface';
+import {ItemMetaHealing} from '../common/interfaces/item/item-meta.interface';
 import {Hero} from '../common/models/hero/hero.model';
 import {Party} from '../common/models/party/party.model';
 import {ItemService} from '../common/services/item.service';
@@ -144,6 +147,109 @@ export class PartyGateway extends RootGateway implements OnGatewayConnection, On
 
 	@SubscribeMessage('useItem')
 	async handleUseItem(sender: PlayerSocket, packet: PacketReceiveUseItem) {
+		if (!sender || !sender.userID) return;
 
+		const player = this.playerService.players[sender.userID];
+
+		if (!player) return;
+
+		console.log('Unequip packet', packet);
+
+		const party = await player.getParty();
+
+		if (!packet.itemID) {
+			console.warn('Tried to use unspecified item');
+			return;
+		}
+
+		const item = await ItemService.getItem(packet.itemID);
+
+		if (!item) {
+			console.warn('Tried to use invalid item: ' + packet.itemID);
+			return;
+		}
+
+		if (!item.isUsable()) {
+			console.warn('Tried to use non-usable item: ' + packet.itemID);
+			return;
+		}
+
+		let heroes: Array<Hero> = [];
+
+		if (item.usableRequiresTarget()) {
+			if (!packet.heroID) {
+				console.warn('Tried to use a target-required usable item without a target: ' + packet.itemID);
+				return;
+			} else {
+				heroes.push(await player.getHeroByID(packet.heroID));
+			}
+		} else {
+			heroes = heroes.concat(await player.getHeroes());
+		}
+
+		switch (item.getUsableType()) {
+			case 'potion':
+				if (item.hasMeta('healing')) {
+					const healing = item.getMeta<ItemMetaHealing>('healing');
+
+					heroes.forEach(hero => {
+						Object.keys(healing).forEach((vitType: VitTypes) => {
+							if (healing[vitType] > -1) {
+								hero.healVitByAmount(vitType, healing[vitType]);
+							} else {
+								hero.healVitToFull(vitType);
+							}
+						});
+					});
+				}
+				break;
+			case 'scroll':
+
+				break;
+		}
+
+		party.removeItem(item, 1);
+
+		if (heroes.length) {
+			await Promise.all(heroes.map(hero => hero.save()));
+		}
+
+		await party.save();
+	}
+
+	@SubscribeMessage('discardItem')
+	async handleDiscardItem(sender: PlayerSocket, packet: PacketReceiveDiscardItem) {
+		if (!sender || !sender.userID) return;
+
+		const player = this.playerService.players[sender.userID];
+
+		if (!player) return;
+
+		console.log('Discard packet', packet);
+
+		const party = await player.getParty();
+
+		if (!packet.itemID) {
+			console.warn('Tried to discard unspecified item');
+			return;
+		}
+
+		const item = await ItemService.getItem(packet.itemID);
+
+		if (!item) {
+			console.warn('Tried to discard invalid item: ' + packet.itemID);
+			return;
+		}
+
+		if (!item.canDiscard()) {
+			console.warn('Tried to discard no-discard item: ' + packet.itemID);
+			return;
+		}
+
+		const amount = Math.min(packet.amount, party.inventory.items[packet.itemID]);
+
+		party.removeItem(item, amount);
+
+		await party.save();
 	}
 }

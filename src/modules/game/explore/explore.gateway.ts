@@ -1,6 +1,11 @@
 import {OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway} from '@nestjs/websockets';
+import {Utils} from '../../../shared/functions/utils';
 import {WeightedList} from '../../../shared/functions/weighted';
-import {PacketSendLoadMap, PacketSendMoveSuccess} from '../../../socket/packets/explore/explore.packets';
+import {
+	PacketSendLoadMap,
+	PacketSendMoveSuccess,
+	PacketSendSpawns
+} from '../../../socket/packets/explore/explore.packets';
 import {PacketSendSetFatigue} from '../../../socket/packets/parties/parties.packets-send';
 import {PlayerSocket} from '../../../socket/player-socket.interface';
 import {RootGateway} from '../../../socket/root-gateway.class';
@@ -11,6 +16,8 @@ import {PacketService} from '../common/services/packet.service';
 import {PartyService} from '../party/party.service';
 import {PlayerService} from '../common/services/player.service';
 import {Forage} from './models/forage.model';
+import {SpawnGroup} from './models/spawnGroup.model';
+import {SpawnService} from './spawn.service';
 import {TiledService} from './tiled.service';
 import * as _ from 'lodash';
 
@@ -19,7 +26,7 @@ import * as _ from 'lodash';
 	namespace: 'explore'
 })
 export class ExploreGateway extends RootGateway implements OnGatewayConnection, OnGatewayInit {
-	constructor(private playerService: PlayerService, private partyService: PartyService, private tiledService: TiledService, private locService: LocationService) {
+	constructor(private playerService: PlayerService, private partyService: PartyService, private tiledService: TiledService, private locService: LocationService, private spawnService: SpawnService) {
 		super(playerService);
 	}
 
@@ -53,6 +60,14 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 				id:      map.mapID,
 				tileset: map.tileset
 			}));
+
+			//Spawn this region if necessary
+			await this.spawnService.evaluateSpawnGroup(await SpawnGroup.getByID(1));
+
+			//Get spawns and send to the client
+			const spawns = await this.spawnService.findSpawnsByCoords(map.mapID, party.posX, party.posY);
+
+			PacketService.sendPacket(player, new PacketSendSpawns(spawns.length ? spawns : []));
 		} catch (error) {
 			console.log('handleMapInit error', error);
 		}
@@ -136,6 +151,11 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 					after: async (job) => {
 						await party.save();
 						party.setCurrentStatus(EPartyCurrentStatus.IDLE);
+
+						//Get spawns and send to the client
+						const spawns = await this.spawnService.findSpawnsByCoords(map.mapID, party.posX, party.posY);
+
+						PacketService.sendPacket(player, new PacketSendSpawns(spawns.length ? spawns : []));
 					}
 				});
 

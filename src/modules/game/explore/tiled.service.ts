@@ -36,6 +36,7 @@ export class TiledTileMap {
 	tiles: ITileGrid                  = [];
 	tilesUsed: Array<number>          = [];
 	regions: Dictionary<ITiledRegion> = {};
+	coords: Array<Array<number>>      = [];
 
 	finder: Easystar.js = new Easystar.js();
 
@@ -73,6 +74,8 @@ export class TiledTileMap {
 						if (!combinedGrid[x][y]) combinedGrid[x][y] = [];
 
 						combinedGrid[x][y].push(grid[x][y]);
+
+						this.coords.push([x, y]);
 					}
 				}
 			});
@@ -199,6 +202,10 @@ export class TiledTileMap {
 		}
 
 		return tiles.map(tileID => this.getTileFromTileset(tileID));
+	}
+
+	getAllCoords() {
+
 	}
 
 	getTileFromTileset(tileID: number): TiledTile {
@@ -347,10 +354,8 @@ export class TiledService {
 		return tilemap;
 	}
 
-	async findRegionInMap(mapID: string, x: number, y: number) {
+	async findRegionAtCoords(mapID: string, x: number, y: number) {
 		const tilemap = await this.getTilemap(mapID);
-
-		console.log('Finding region at', x, y, 'in', mapID);
 
 		if (tilemap && tilemap.regions) {
 			return Object.keys(tilemap.regions).find(regionID => {

@@ -1,21 +1,18 @@
 import {Model} from 'objection';
+import {TraitsDictionary} from '../../dicts/traits.dict';
 import {EGender} from '../../interfaces/hero/hero-misc.enum';
 import {IEquipment} from '../../interfaces/hero/hero.interface';
 import {IStatList, VitTypes} from '../../interfaces/hero/stats.interface';
 import {BackstoriesDict} from '../../dicts/backstories.dict';
+import {IVitality} from '../../interfaces/misc/vitality.interface';
+import {ISkillLevelList} from '../../interfaces/skills/skills.interface';
 import {ItemService} from '../../services/item.service';
 import {EquipSlot, Item} from '../items/item.model';
 
 export interface ICalculatedHeroFields {
-	vitality: {
-		health: [number, number],
-		stamina: [number, number],
-		mana: [number, number]
-	},
+	vitality: IVitality,
 	stats: IStatList;
-	skills: {
-		[skillName: string]: number;
-	};
+	skills: ISkillLevelList;
 	traits: Array<string>;
 }
 
@@ -42,9 +39,7 @@ export class Hero extends Model {
 	level: number                  = 1;
 	backstoryID: string            = null;
 	traits: Array<string>          = [];
-	skills: {
-		[skillName: string]: number;
-	}                              = {};
+	skills: ISkillLevelList        = {};
 	stats: IStatList               = {
 		str: 5,
 		int: 5,
@@ -52,11 +47,7 @@ export class Hero extends Model {
 		con: 5,
 		luk: 5
 	};
-	vitality: {
-		health: [number, number],
-		stamina: [number, number],
-		mana: [number, number]
-	}                              = {
+	vitality: IVitality            = {
 		health:  [85, 85],
 		stamina: [85, 85],
 		mana:    [85, 85]
@@ -125,12 +116,28 @@ export class Hero extends Model {
 			}
 			//endregion
 
-			//region Backstory traits
+			//region Traits
+			Object.assign(calc.traits, this.traits);
+
 			const backstory = BackstoriesDict[this.backstoryID];
 
 			if (backstory && backstory.traits) {
 				calc.traits = calc.traits.concat(backstory.traits);
 			}
+			//endregion
+
+			//region Skills
+			Object.assign(calc.skills, this.skills);
+
+			calc.traits.forEach(traitID => {
+				const trait = TraitsDictionary.find(t => t.traitID == traitID);
+
+				if (Array.isArray(trait.skills)) {
+					trait.skills.forEach(skill => {
+						calc.skills[skill.skill] = (calc.skills[skill.skill] || 0) + skill.value
+					});
+				}
+			});
 			//endregion
 
 			this.$calculated = calc;
@@ -197,6 +204,7 @@ export class Hero extends Model {
 	healVitToFull(type: VitTypes) {
 		this.setVitPct(type, 1);
 	}
+
 	//endregion
 
 	//region Equipment
@@ -211,5 +219,6 @@ export class Hero extends Model {
 	unsetEquipSlot(slot: EquipSlot) {
 		this.equipment[slot] = undefined;
 	}
+
 	//endregion
 }

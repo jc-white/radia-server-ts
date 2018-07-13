@@ -15,3 +15,8 @@ export interface PacketReceiveUseItem {
 	itemID: number;
 	heroID?: number;
 }
+
+export interface PacketReceiveDiscardItem {
+	itemID: number;
+	amount: number;
+}

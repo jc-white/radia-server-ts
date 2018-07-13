@@ -1,3 +1,4 @@
+import {Dictionary} from 'lodash';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 

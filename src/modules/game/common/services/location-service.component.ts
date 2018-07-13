@@ -1,10 +1,11 @@
 import {Component} from '@nestjs/common';
 import {Dictionary} from 'lodash';
-import {IPartyLocation} from '../../explore/interfaces/explore.interface';
+import {ICoordPair, IPartyLocation} from '../../explore/interfaces/explore.interface';
 import {TiledService} from '../../explore/tiled.service';
 import {Map} from '../models/location/map.model';
 import {Region} from '../models/location/region.model';
 import {Party} from '../models/party/party.model';
+import * as _ from 'lodash';
 
 @Component()
 export class LocationService {
@@ -15,11 +16,17 @@ export class LocationService {
 			[mapID: string]: {
 				[coords: string]: string
 			}
+		},
+		tilesByRegion: {
+			[mapID: string]: {
+				[regionID: string]: Array<string>
+			}
 		}
 	} = {
 		maps:          {},
 		regions:       {},
-		regionsByTile: {}
+		regionsByTile: {},
+		tilesByRegion: {}
 	};
 
 	constructor(private tiledService: TiledService) {
@@ -39,6 +46,25 @@ export class LocationService {
 		}
 
 		this.cache.maps[map.mapID] = map;
+
+		const tilemap      = await this.tiledService.getTilemap(map.mapID);
+
+		//Cache index of regions by tile
+		for (let x = 0; x < tilemap.width; x++) {
+			for (let y = 0; y < tilemap.height; y++) {
+				await this.getRegionByTile(map.mapID, x, y);
+			}
+		}
+
+		//Cache index of tiles by region
+		const pairs              = _.toPairs(this.cache.regionsByTile[map.mapID]),
+		      tilesByRegion: any = {};
+
+		pairs.forEach(pair => {
+			tilesByRegion[pair[1]] = Array.isArray(tilesByRegion[pair[1]]) ? [...tilesByRegion[pair[1]], pair[0]] : [pair[0]];
+		});
+
+		this.cache.tilesByRegion[map.mapID] = tilesByRegion;
 
 		return map;
 	}
@@ -69,24 +95,24 @@ export class LocationService {
 	}
 
 	async getRegionByTile(mapID: string, x: number, y: number): Promise<Region> {
-		if (this.cache.regionsByTile[mapID] && this.cache.regionsByTile[mapID][`${x}${y}`]) {
+		if (this.cache.regionsByTile[mapID] && this.cache.regionsByTile[mapID][`${x},${y}`]) {
 			console.log('Cached!');
-			return this.getRegion(this.cache.regionsByTile[mapID][`${x}${y}`]);
+			return this.getRegion(this.cache.regionsByTile[mapID][`${x},${y}`]);
 		}
 
-		let region = await this.getRegion(this.tiledService.findRegionInMap(mapID, x, y));
+		let region = await this.getRegion(this.tiledService.findRegionAtCoords(mapID, x, y));
 
 		if (region) {
 			if (!this.cache.regionsByTile[mapID]) {
 				this.cache.regionsByTile[mapID] = {};
 			}
 
-			this.cache.regionsByTile[mapID][`${x}${y}`] = region.regionID;
+			this.cache.regionsByTile[mapID][`${x},${y}`] = region.regionID;
 		} else {
 			region = Object.assign(new Region(), {
-				regionID:         'wilderness',
-				name:             'The Wilderness',
-				mapID:            mapID
+				regionID: 'wilderness',
+				name:     'The Wilderness',
+				mapID:    mapID
 			});
 		}
 
@@ -104,9 +130,9 @@ export class LocationService {
 				region = await this.getRegion(map.wilderness);
 			} else {
 				region = Object.assign(new Region(), {
-					regionID:         'wilderness',
-					name:             'The Wilderness',
-					mapID:            map.mapID
+					regionID: 'wilderness',
+					name:     'The Wilderness',
+					mapID:    map.mapID
 				});
 			}
 
@@ -123,5 +149,27 @@ export class LocationService {
 		} catch (error) {
 			console.error('Error getting party location', error);
 		}
+	}
+
+	async getRandomTileInMap(mapID: string): Promise<ICoordPair> {
+		await this.getMap(mapID);
+
+		const coords = _.sample(Object.keys(this.cache.regionsByTile[mapID])).split(',');
+
+		return {
+			x: parseInt(coords[0], 10),
+			y: parseInt(coords[1], 10)
+		};
+	}
+
+	async getRandomTileInRegion(mapID: string, regionID: string) {
+		await this.getMap(mapID);
+
+		const coords = _.sample(Object.values(this.cache.tilesByRegion[mapID][regionID])).split(',');
+
+		return {
+			x: parseInt(coords[0], 10),
+			y: parseInt(coords[1], 10)
+		};
 	}
 }

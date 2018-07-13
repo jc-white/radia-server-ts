@@ -6,3 +6,7 @@ export interface ISkill {
 	name: string;
 	desc: string;
 }
+
+export interface ISkillLevelList {
+	[skillID: string]: number;
+}

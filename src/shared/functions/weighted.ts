@@ -2,10 +2,10 @@ import {Chance} from 'chance';
 
 export class WeightedList<T> {
 	private chance: Chance.Chance;
-	private items: Array<T>;
+	private items: Array<T> = [];
 	private weightKey: string;
 
-	constructor(items: Array<T>, weightKey: string) {
+	constructor(items: Array<T>, weightKey: string = 'weight') {
 		this.chance    = new Chance();
 		this.weightKey = weightKey;
 
@@ -19,6 +19,8 @@ export class WeightedList<T> {
 	}
 
 	pull(): T {
+		if (!this.items.length) return null;
+
 		const values: Array<T>       = [],
 		      weights: Array<number> = [];
 

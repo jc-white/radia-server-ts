@@ -7,16 +7,26 @@ import * as _ from 'lodash';
 export type ItemType = 'usable' | 'equipment' | 'misc';
 export type EquipSlot = 'head' | 'chest' | 'legs' | 'feet' | 'hands' | 'neck' | 'finger' | 'primary' | 'secondary';
 export type ItemSubType =
-	'slashing'
-	| 'piercing'
+	'piercing'
+	| 'slashing'
 	| 'blunt'
 	| 'lightshield'
 	| 'heavyshield'
 	| 'lightarmor'
 	| 'heavyarmor'
 	| 'clothing'
-	| 'targetsingle'
-	| 'targetparty';
+	| 'potion'
+	| 'scroll'
+	| 'usablespecial'
+	| 'jewelry'
+	| 'readable'
+	| 'usable'
+	| 'weapon'
+	| 'armor'
+	| 'shield'
+	| 'accessory';
+
+export const UsableSubTypes = ['potion', 'scroll', 'usablespecial'];
 
 export class Item extends Model {
 	static tableName: string = 'items';
@@ -32,10 +42,11 @@ export class Item extends Model {
 	icon: string;
 	equipSlots: Array<EquipSlot>;
 	scripts: {
-		[trigger: string]: string
+		[trigger: string]: string;
 	};
-	meta: {};
+	meta: any;
 	info: string;
+	tags: Array<string>;
 
 	$afterGet(ctx: QueryContext) {
 		if (!this.info) return;
@@ -61,4 +72,52 @@ export class Item extends Model {
 		//Since it's one-dimensional this can just be a regex + split
 		this.itemSubTypes = this.itemSubTypes ? this.itemSubTypes.replace(/[\{\}]/g, '').split(',') : [];
 	}
+
+	//region Usable
+	isUsable() {
+		return this.itemType == 'usable' && ((this.itemSubTypes && this.itemSubTypes.length && UsableSubTypes.indexOf(this.itemSubTypes[0]) > -1) || (this.scripts && this.scripts.use));
+	}
+
+	getUsableType() {
+		if (!this.isUsable()) return null;
+
+		if (this.itemSubTypes && this.itemSubTypes.length) return this.itemSubTypes[0];
+
+		return this.scripts.use;
+	}
+
+	usableRequiresTarget() {
+		if (!this.isUsable()) return false;
+
+		return this.hasMeta('target') && this.getMeta('target') === true;
+	}
+	//endregion
+
+	//region Equippable
+	isEquippable() {
+		return this.itemType == 'equipment';
+	}
+	//endregion
+
+	//region Meta
+	hasMeta(metaKey: string) {
+		return this.meta && _.has(this.meta, metaKey) && !_.isEmpty(this.meta[metaKey]);
+	}
+
+	getMeta<T>(metaKey: string): T {
+		if (!this.hasMeta(metaKey)) return null;
+
+		return _.get<T>(this.meta, metaKey);
+	}
+	//endregion
+
+	//region Misc
+	hasTag(tag: string) {
+		return Array.isArray(this.tags) && this.tags.indexOf(tag) > -1;
+	}
+
+	canDiscard() {
+		return !this.hasTag('no-discard');
+	}
+	//endregion
 }
