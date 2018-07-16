@@ -1,4 +1,5 @@
 import {Chance} from 'chance';
+import * as _ from 'lodash';
 
 export class WeightedList<T> {
 	private chance: Chance.Chance;
@@ -30,5 +31,17 @@ export class WeightedList<T> {
 		});
 
 		return this.chance.weighted<T>(values, weights);
+	}
+
+	pullMultiple(amount: number): Array<T> {
+		const items = [];
+
+		for (let x = 0; x < Math.min(this.items.length, amount); x++) {
+			const result = this.pull();
+			_.pull(this.items, result);
+			items.push(result);
+		}
+
+		return items;
 	}
 }

@@ -56,5 +56,9 @@ export const Utils = {
 		}
 
 		return matches;
+	},
+
+	ucFirst(string: string) {
+		return string.charAt(0).toUpperCase() + string.slice(1);
 	}
 };

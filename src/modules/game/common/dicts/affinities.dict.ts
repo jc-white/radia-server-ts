@@ -1,22 +1,43 @@
-export const AffinitiesDictionary = {
+import {IAffinity} from '../interfaces/affinities/affinity.interface';
+
+export const AffinitiesDictionary: {
+	[affinityID: string]: IAffinity
+} = {
 	brawn: {
-		name: 'Brawn'
+		name:  'Brawn',
+		statWeights: {
+			str: 1,
+			con: 1
+		}
 	},
 
 	combat: {
-		name: 'Combat Ability'
+		name:  'Combat Ability',
+		statWeights: {
+			str: 1,
+			dex: 1
+		}
 	},
 
 	arcane: {
-		name: 'Arcane Ability'
+		name:  'Arcane Ability',
+		statWeights: {
+			int: 1
+		}
 	},
 
 	learning: {
-		name: 'Learning Ability'
+		name:  'Learning Ability',
+		statWeights: {
+			int: 2
+		}
 	},
 
 	luck: {
-		name: 'Luck'
+		name:  'Luck',
+		statWeights: {
+			luk: 1
+		}
 	},
 
 	alcohol: {
@@ -24,11 +45,17 @@ export const AffinitiesDictionary = {
 	},
 
 	evasiveness: {
-		name: 'Evasiveness'
+		name:  'Evasiveness',
+		statWeights: {
+			dex: 2
+		}
 	},
 
 	accuracy: {
-		name: 'Accuracy'
+		name:  'Accuracy',
+		statWeights: {
+			dex: 1
+		}
 	},
 
 	charisma: {
@@ -36,7 +63,10 @@ export const AffinitiesDictionary = {
 	},
 
 	fortitude: {
-		name: 'Fortitude'
+		name:  'Fortitude',
+		statWeights: {
+			con: 2
+		}
 	},
 
 	speechcraft: {

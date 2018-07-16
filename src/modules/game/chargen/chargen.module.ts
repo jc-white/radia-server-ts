@@ -1,5 +1,4 @@
 import {Module} from '@nestjs/common';
-import {HeroService} from '../common/services/hero.service';
 import {ChargenService} from './chargen.service';
 import {ChargenController} from './chargen.controller';
 
@@ -8,8 +7,7 @@ import {ChargenController} from './chargen.controller';
 		ChargenController
 	],
 	components: [
-		ChargenService,
-		HeroService
+		ChargenService
 	],
 	exports: [
 		ChargenService

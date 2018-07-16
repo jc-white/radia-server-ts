@@ -1,20 +1,17 @@
 import {Model} from 'objection';
+import {WeightedList} from '../../../../../shared/functions/weighted';
+import {AffinitiesDictionary} from '../../dicts/affinities.dict';
 import {TraitsDictionary} from '../../dicts/traits.dict';
+import {IAffinityLevelList} from '../../interfaces/affinities/affinity.interface';
 import {EGender} from '../../interfaces/hero/hero-misc.enum';
-import {IEquipment} from '../../interfaces/hero/hero.interface';
+import {ICalculatedHeroFields, IEquipment} from '../../interfaces/hero/hero.interface';
 import {IStatList, VitTypes} from '../../interfaces/hero/stats.interface';
 import {BackstoriesDict} from '../../dicts/backstories.dict';
 import {IVitality} from '../../interfaces/misc/vitality.interface';
 import {ISkillLevelList} from '../../interfaces/skills/skills.interface';
 import {ItemService} from '../../services/item.service';
 import {EquipSlot, Item} from '../items/item.model';
-
-export interface ICalculatedHeroFields {
-	vitality: IVitality,
-	stats: IStatList;
-	skills: ISkillLevelList;
-	traits: Array<string>;
-}
+import * as _ from 'lodash';
 
 export class Hero extends Model {
 	static tableName: string                = 'heroes';
@@ -53,6 +50,7 @@ export class Hero extends Model {
 		mana:    [85, 85]
 	};
 	equipment: Partial<IEquipment> = {};
+	affinities: IAffinityLevelList = {};
 
 	$calculated: ICalculatedHeroFields;
 
@@ -63,20 +61,21 @@ export class Hero extends Model {
 	async calc() {
 		try {
 			const calc: ICalculatedHeroFields = {
-				vitality: {
+				vitality:   {
 					health:  [0, 0],
 					stamina: [0, 0],
 					mana:    [0, 0]
 				},
-				stats:    {
+				stats:      {
 					str: 0,
 					int: 0,
 					dex: 0,
 					con: 0,
 					luk: 0
 				},
-				skills:   {},
-				traits:   []
+				skills:     {},
+				traits:     [],
+				affinities: {}
 			};
 
 			//region Calculate vitality
@@ -121,8 +120,10 @@ export class Hero extends Model {
 
 			const backstory = BackstoriesDict[this.backstoryID];
 
-			if (backstory && backstory.traits) {
-				calc.traits = calc.traits.concat(backstory.traits);
+			if (backstory) {
+				if (backstory.traits) {
+					calc.traits = calc.traits.concat(backstory.traits);
+				}
 			}
 			//endregion
 
@@ -140,6 +141,22 @@ export class Hero extends Model {
 			});
 			//endregion
 
+			//region Affinities
+			Object.assign(calc.affinities, this.affinities);
+
+			if (calc.traits.length) {
+				calc.traits.forEach(traitID => {
+					const trait = TraitsDictionary.find(t => t.traitID == traitID);
+
+					if (trait.affinities) {
+						trait.affinities.forEach(affinityModifier => {
+							calc.affinities[affinityModifier.affinity] = (calc.affinities[affinityModifier.affinity] || 0) + affinityModifier.value;
+						});
+					}
+				});
+			}
+			//endregion
+
 			this.$calculated = calc;
 		} catch (err) {
 			console.log('calc err', err);
@@ -148,8 +165,57 @@ export class Hero extends Model {
 	}
 
 	save() {
-		return Hero.query().where('heroID', this.heroID).update(this.toJSON());
+		if (this.heroID) {
+			return Hero.query().where('heroID', this.heroID).update(this.toJSON());
+		}
 	}
+
+	//region Leveling
+	levelUp() {
+		let statWeights = {
+			str: 10,
+			int: 10,
+			dex: 10,
+			con: 10,
+			luk: 3
+		};
+
+		if (this.calculated.affinities) {
+			Object.keys(this.calculated.affinities).forEach(affinityID => {
+				const affinityLevel = this.calculated.affinities[affinityID],
+				      affinity      = AffinitiesDictionary[affinityID];
+
+				if (!_.isEmpty(affinity.statWeights)) {
+					//Loop through all the statWeight modifiers of the affinity and add them to the base weights
+					Object.keys(affinity.statWeights).forEach(stat => {
+						//We can't go below 1 for the weight. A stat can always be chosen in the level-up process, no matter the affinities.
+						statWeights[stat] = Math.max(1, statWeights[stat] + (affinity.statWeights[stat] * affinityLevel));
+					});
+				}
+			});
+		}
+
+		console.log(statWeights);
+
+		const wl = new WeightedList<{ stat: string, weight: number }>([]);
+
+		Object.keys(statWeights).forEach(stat => {
+			wl.add({
+				stat:   stat,
+				weight: statWeights[stat]
+			});
+		});
+
+		for (let x = 0; x < 5; x++) {
+			const opt = wl.pull();
+
+			this.stats[opt.stat]++;
+		}
+
+		this.level++;
+	}
+
+	//endregion
 
 	//region Vitality
 	getCurrentVit(type: VitTypes) {

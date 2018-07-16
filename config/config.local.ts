@@ -1,3 +1,5 @@
+import * as path from 'path';
+
 export const config = {
 	db: {
 		host:     'localhost',
@@ -13,6 +15,7 @@ export const config = {
 	},
 
 	paths: {
-		statics: 'G:\\nginx\\html'
+		statics:   'G:\\nginx\\html',
+		nameDicts: path.join(__dirname, '..', 'src', 'modules', 'game', 'common', 'dicts', 'names')
 	}
 };
