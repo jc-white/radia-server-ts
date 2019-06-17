@@ -1,7 +1,8 @@
 {
-	"name": "nest-typescript-starter",
+	"name": "radia-server-ts",
 	"version": "1.0.0",
-	"description": "Nest TypeScript starter repository",
+	"description": "Nest TypeScript repository for Radia RPG server",
+	"author": "Jarin White <jarinwhite@gmail.com>",
 	"license": "MIT",
 	"scripts": {
 		"start": "node index.js",

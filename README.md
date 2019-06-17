@@ -1,20 +1,3 @@
-[![Nest Logo](http://kamilmysliwiec.com/public/nest-logo.png)](http://nestjs.com/)
+The TypeScript implementation of the Radia RPG server utilizing the NestJS framework. This project is very much a work in progress, but please browse at your leisure!
 
-The [Nest](https://github.com/kamilmysliwiec/nest) framework starter repository. 
-
-## Installation
-
-```
-$ npm install
-```
-
-## Start
-
-```
-$ npm run start
-```
-
-## People
-
-- Author - [Kamil Myśliwiec](http://kamilmysliwiec.com)
-- Website - [http://nestjs.com](http://nestjs.com/)
+Jarin
