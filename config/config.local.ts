@@ -15,7 +15,7 @@ export const config = {
 	},
 
 	paths: {
-		statics:   'G:\\nginx\\html',
+		statics:   'E:\\nginx\\html',
 		nameDicts: path.join(__dirname, '..', 'src', 'modules', 'game', 'common', 'dicts', 'names')
 	}
 };
