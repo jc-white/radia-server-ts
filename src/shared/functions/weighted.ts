@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 
 export class WeightedList<T> {
 	private chance: Chance.Chance;
-	private items: Array<T> = [];
+	public items: Array<T> = [];
 	private weightKey: string;
 
 	constructor(items: Array<T>, weightKey: string = 'weight') {
@@ -16,10 +16,12 @@ export class WeightedList<T> {
 	}
 
 	add(item: T) {
+		if (this.items.indexOf(item) > -1) return;
+
 		this.items.push(item);
 	}
 
-	pull(): T {
+	pull(andRemove: boolean = false): T {
 		if (!this.items.length) return null;
 
 		const values: Array<T>       = [],
@@ -30,18 +32,36 @@ export class WeightedList<T> {
 			weights.push(item[this.weightKey]);
 		});
 
-		return this.chance.weighted<T>(values, weights);
+		const pulledItem = this.chance.weighted<T>(values, weights);
+
+		if (andRemove) {
+			_.pull(this.items, pulledItem);
+		}
+
+		return pulledItem;
 	}
 
-	pullMultiple(amount: number): Array<T> {
+	pullMultiple(amount: number, andRemove: boolean = false): Array<T> {
+		if (!this.items.length) return [];
+
 		const items = [];
 
 		for (let x = 0; x < Math.min(this.items.length, amount); x++) {
 			const result = this.pull();
-			_.pull(this.items, result);
+
+			if (andRemove) {
+				_.pull(this.items, result);
+			}
+
 			items.push(result);
 		}
 
 		return items;
+	}
+
+	removeBy(predicate: any) {
+		if (!this.items.length) return;
+
+		_.remove(this.items, predicate);
 	}
 }

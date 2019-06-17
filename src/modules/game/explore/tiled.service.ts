@@ -7,6 +7,7 @@ import {Sanitizers} from '../../../shared/functions/sanitizers';
 import * as Easystar from 'easystarjs';
 import {ICoordPair} from './interfaces/explore.interface';
 import {
+	ITiledObject,
 	ITiledObjectGroup,
 	ITiledPolyline,
 	ITiledProperty,
@@ -37,6 +38,7 @@ export class TiledTileMap {
 	tilesUsed: Array<number>          = [];
 	regions: Dictionary<ITiledRegion> = {};
 	coords: Array<Array<number>>      = [];
+	tileProps: Array<ITiledObject>    = [];
 
 	finder: Easystar.js = new Easystar.js();
 
@@ -53,6 +55,7 @@ export class TiledTileMap {
 		this.buildCombinedGrid();
 		this.buildPathingGrid();
 		this.findRegions();
+		this.findTileProps();
 	}
 
 	buildCombinedGrid() {
@@ -60,10 +63,12 @@ export class TiledTileMap {
 			const layerGrids              = [],
 			      combinedGrid: ITileGrid = [];
 
-			this.layers.filter(layer => layer.type == 'tilelayer').forEach((layer, index) => {
-				this.layers[index] = new TiledLayer(layer);
+			this.layers.forEach((layer, index) => {
+				if (layer.type == 'tilelayer') {
+					this.layers[index] = new TiledLayer(layer);
 
-				layerGrids.push(this.layers[index].grid);
+					layerGrids.push(this.layers[index].grid);
+				}
 			});
 
 			layerGrids.forEach(grid => {
@@ -94,7 +99,7 @@ export class TiledTileMap {
 			let col = [];
 
 			for (let x = 0; x < this.width; x++) {
-				col.push(this.getTileIDAt(x, y, 'backgroundLayer'));
+				col.push(this.getTileIDAt(x, y, 'collisionLayer'));
 			}
 
 			grid.push(col);
@@ -120,6 +125,22 @@ export class TiledTileMap {
 				};
 
 				this.regions[newRegion.regionID] = newRegion;
+			});
+		}
+	}
+
+	findTileProps() {
+		const tileDataLayer = this.layers.find(layer => layer.name == 'tileDataLayer');
+
+		if (tileDataLayer) {
+			this.tileProps = tileDataLayer.objects.map((object: ITiledObject) => {
+				if (object.properties && object.properties.hasOwnProperty('tileProps')) {
+					object.properties.tileProps = JSON.parse(object.properties.tileProps);
+					object.x = object.x / 24;
+					object.y = object.y / 24;
+				}
+
+				return object;
 			});
 		}
 	}
@@ -204,8 +225,10 @@ export class TiledTileMap {
 		return tiles.map(tileID => this.getTileFromTileset(tileID));
 	}
 
-	getAllCoords() {
+	getTilePropsAt(x: number, y: number): Dictionary<any> {
+		const props = this.tileProps.find(object => object.x == x && object.y == y);
 
+		return (props && props.properties.tileProps && JSON.parse(props.properties.tileProps)) || null;
 	}
 
 	getTileFromTileset(tileID: number): TiledTile {
@@ -381,8 +404,8 @@ function isPointInPoly(x: number, y: number, poly: Array<ICoordPair>): boolean {
 	let inside = false;
 
 	for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-		let xi                = vs[i][0], yi = vs[i][1],
-		    xj = vs[j][0], yj = vs[j][1];
+		let xi = vs[i][0], yi = vs[i][1],
+		    xj                = vs[j][0], yj = vs[j][1];
 
 		let intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
 		if (intersect) inside = !inside;

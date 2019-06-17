@@ -1,6 +1,7 @@
 import {Component} from '@nestjs/common';
 import {Dictionary} from 'lodash';
 import {ICoordPair, IPartyLocation} from '../../explore/interfaces/explore.interface';
+import {ITiledObject} from '../../explore/interfaces/tiled.interface';
 import {TiledService} from '../../explore/tiled.service';
 import {Map} from '../models/location/map.model';
 import {Region} from '../models/location/region.model';
@@ -21,12 +22,24 @@ export class LocationService {
 			[mapID: string]: {
 				[regionID: string]: Array<string>
 			}
+		},
+		propsByTile: {
+			[mapID: string]: {
+				[coords: string]: any
+			}
+		},
+		instanceDataByTile: {
+			[mapID: string]: {
+				[coords: string]: any
+			}
 		}
 	} = {
-		maps:          {},
-		regions:       {},
-		regionsByTile: {},
-		tilesByRegion: {}
+		maps:               {},
+		regions:            {},
+		regionsByTile:      {},
+		tilesByRegion:      {},
+		propsByTile:        {},
+		instanceDataByTile: {}
 	};
 
 	constructor(private tiledService: TiledService) {
@@ -47,7 +60,7 @@ export class LocationService {
 
 		this.cache.maps[map.mapID] = map;
 
-		const tilemap      = await this.tiledService.getTilemap(map.mapID);
+		const tilemap = await this.tiledService.getTilemap(map.mapID);
 
 		//Cache index of regions by tile
 		for (let x = 0; x < tilemap.width; x++) {
@@ -171,5 +184,52 @@ export class LocationService {
 			x: parseInt(coords[0], 10),
 			y: parseInt(coords[1], 10)
 		};
+	}
+
+	async getTileProperties(mapID: string, x: number, y: number) {
+		await this.cacheAllTileProperties(mapID);
+
+		return this.cache.propsByTile[mapID][`${x},${y}`] || null;
+	}
+
+	async cacheAllTileProperties(mapID: string): Promise<void> {
+		const tilemap = await this.tiledService.getTilemap(mapID);
+
+		if (!tilemap || _.isEmpty(tilemap.tileProps)) {
+			return;
+		}
+
+		if (!this.cache.propsByTile[mapID]) this.cache.propsByTile[mapID] = {};
+
+		tilemap.tileProps
+			.filter((props: ITiledObject) => props.properties && props.properties.hasOwnProperty('tileProps'))
+			.forEach((props: ITiledObject) => {
+				this.cache.propsByTile[mapID][`${props.x},${props.y}`] = props.properties.tileProps;
+			});
+	}
+
+	getVisibleTileProps(props: Dictionary<any>): Dictionary<any> {
+		const defaultVisibleProps = ['locationType', 'locationName'];
+
+		if (_.isEmpty(props)) return {};
+
+		return _.pick(props, defaultVisibleProps);
+	}
+
+	getTileInstanceProp(mapID: string, x: number, y: number, propName: string) {
+		if (!this.cache.instanceDataByTile[mapID] || !this.cache.instanceDataByTile[mapID][`${x},${y}`]) return null;
+
+		const prop = this.cache.instanceDataByTile[mapID][`${x},${y}`][propName];
+
+		if (_.isPlainObject(prop)) return Object.assign({}, prop); //We don't want a reference to plain objects
+
+		return prop;
+	}
+
+	setTileInstanceProp(mapID: string, x: number, y: number, propName: string, propValue: any) {
+		if (!this.cache.instanceDataByTile[mapID]) this.cache.instanceDataByTile[mapID] = {};
+		if (!this.cache.instanceDataByTile[mapID][`${x},${y}`]) this.cache.instanceDataByTile[mapID][`${x},${y}`] = {};
+
+		this.cache.instanceDataByTile[mapID][`${x},${y}`][propName] = propValue;
 	}
 }

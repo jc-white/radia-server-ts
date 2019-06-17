@@ -36,7 +36,7 @@ export interface ITiledObject {
 	y: number;
 	width: number;
 	height: number;
-	properties: Dictionary<string>;
+	properties: Dictionary<any>;
 	rotation: number;
 	gid?: number;
 	visible: boolean;

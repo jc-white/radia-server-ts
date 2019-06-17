@@ -2,11 +2,11 @@ import {Component} from '@nestjs/common';
 import {WeightedList} from '../../../shared/functions/weighted';
 import {LocationService} from '../common/services/location-service.component';
 import {ICoordPair} from './interfaces/explore.interface';
-import {NPC} from './models/npc.model';
-import {SpawnGroup} from './models/spawnGroup.model';
-import {SpawnGroupLocationMap} from './models/spawnGroupLocationMap.model';
-import {SpawnGroupEntry} from './models/spawnGroupNpcMap.model';
-import {SpawnVirtual} from './virtuals/spawn.virtual';
+import {NPC} from './models/npc/npc.model';
+import {SpawnGroup} from './models/spawn/spawnGroup.model';
+import {SpawnGroupLocationMap} from './models/spawn/spawnGroupLocationMap.model';
+import {SpawnGroupEntry} from './models/spawn/spawnGroupNpcMap.model';
+import {SpawnVirtual} from './virtuals/spawn/spawn.virtual';
 import * as _ from 'lodash';
 
 @Component()
@@ -18,6 +18,7 @@ export class SpawnService {
 
 	}
 
+	//region Spawns
 	async buildSpawnGroupCache() {
 		this.spawnGroupCache = await SpawnGroup.query()
 			.eager('[locationMaps, entries]');
@@ -129,4 +130,12 @@ export class SpawnService {
 	findSpawnsByCoords(mapID: string, x: number, y: number) {
 		return this.spawns.filter(spawn => (spawn.x && spawn.y) && spawn.x == x && spawn.y == y);
 	}
+
+	//endregion Spawns
+
+	//region Hero Recruitment
+	findTavernsInMap(mapID: string) {
+
+	}
+	//endregion Hero Recruitment
 }

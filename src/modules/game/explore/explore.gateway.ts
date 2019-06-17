@@ -3,20 +3,26 @@ import {Utils} from '../../../shared/functions/utils';
 import {WeightedList} from '../../../shared/functions/weighted';
 import {
 	PacketSendLoadMap,
-	PacketSendMoveSuccess,
-	PacketSendSpawns
+	PacketSendMoveSuccess, PacketSendRecruitableHeroes,
+	PacketSendSpawns, PacketSendTileProps
 } from '../../../socket/packets/explore/explore.packets';
-import {PacketSendSetFatigue} from '../../../socket/packets/parties/parties.packets-send';
+import {PacketSendItems, PacketSendSetFatigue} from '../../../socket/packets/parties/parties.packets-send';
 import {PlayerSocket} from '../../../socket/player-socket.interface';
 import {RootGateway} from '../../../socket/root-gateway.class';
 import {PartyResources} from '../common/dicts/resources.dict';
+import {HeroTemplate} from '../common/models/hero/hero-template.model';
+import {Hero} from '../common/models/hero/hero.model';
 import {EPartyCurrentStatus} from '../common/models/party/party.enum';
+import {HeroService} from '../common/services/hero.service';
+import {ItemService} from '../common/services/item.service';
 import {LocationService} from '../common/services/location-service.component';
 import {PacketService} from '../common/services/packet.service';
+import {GameConfig} from '../config/game.config';
 import {PartyService} from '../party/party.service';
 import {PlayerService} from '../common/services/player.service';
-import {Forage} from './models/forage.model';
-import {SpawnGroup} from './models/spawnGroup.model';
+import {Forage} from './models/misc/forage.model';
+import {RecruitGroup} from './models/recruit/recruit-group.model';
+import {SpawnGroup} from './models/spawn/spawnGroup.model';
 import {SpawnService} from './spawn.service';
 import {TiledService} from './tiled.service';
 import * as _ from 'lodash';
@@ -26,7 +32,8 @@ import * as _ from 'lodash';
 	namespace: 'explore'
 })
 export class ExploreGateway extends RootGateway implements OnGatewayConnection, OnGatewayInit {
-	constructor(private playerService: PlayerService, private partyService: PartyService, private tiledService: TiledService, private locService: LocationService, private spawnService: SpawnService) {
+	constructor(private playerService: PlayerService, private partyService: PartyService, private tiledService: TiledService, private locService: LocationService, private spawnService: SpawnService,
+	            private heroService: HeroService) {
 		super(playerService);
 	}
 
@@ -45,6 +52,8 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 			const map    = await this.locService.getMap(party.mapID),
 			      region = await this.locService.getRegionByTile(party.mapID, party.posX, party.posY);
 
+			await this.locService.cacheAllTileProperties(party.mapID);
+
 			if (region) {
 				//Send region welcome message
 				PacketService.sendMessage(player, `You are currently in ${region.name}.`);
@@ -62,12 +71,25 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 			}));
 
 			//Spawn this region if necessary
+			//TODO: Get all spawn groups in this map and spawn those instead of spawnGroupID = 1
 			await this.spawnService.evaluateSpawnGroup(await SpawnGroup.getByID(1));
 
 			//Get spawns and send to the client
 			const spawns = await this.spawnService.findSpawnsByCoords(map.mapID, party.posX, party.posY);
 
 			PacketService.sendPacket(player, new PacketSendSpawns(spawns.length ? spawns : []));
+
+			//If this tile has properties, send non-hidden props to the client
+			const tileProps    = await this.locService.getTileProperties(map.mapID, party.posX, party.posY),
+			      visibleProps = this.locService.getVisibleTileProps(tileProps);
+
+			PacketService.sendPacket(player, new PacketSendTileProps(visibleProps));
+
+			if (!_.isEmpty(tileProps)) {
+				if (tileProps.enterText) {
+					PacketService.sendMessage(player, tileProps.enterText);
+				}
+			}
 		} catch (error) {
 			console.log('handleMapInit error', error);
 		}
@@ -136,6 +158,23 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 									party.setCurrentRegion(region);
 								}
 
+								//If this tile has properties, send non-hidden props to the client
+								const tileProps    = await this.locService.getTileProperties(map.mapID, path[i].x, path[i].y),
+								      oldTileProps = await this.locService.getTileProperties(map.mapID, party.posX, party.posY),
+								      visibleProps = this.locService.getVisibleTileProps(tileProps);
+
+								PacketService.sendPacket(player, new PacketSendTileProps(visibleProps));
+
+								if (!_.isEmpty(tileProps)) {
+									if (tileProps.enterText) {
+										PacketService.sendMessage(player, tileProps.enterText);
+									}
+								}
+
+								if (!_.isEmpty(oldTileProps) && oldTileProps.exitText) {
+									PacketService.sendMessage(player, oldTileProps.exitText);
+								}
+
 								party.setPos(path[i].x, path[i].y);
 								PacketService.sendPacket(player, new PacketSendMoveSuccess([path[i]]));
 
@@ -201,7 +240,7 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 				}, 1000);
 			} else if (party.getResource('meals') > 0) {
 				player.queue.addTask(() => {
-					const mealsToShare = party.getResource('meals'),
+					const mealsToShare = Math.min(party.getResource('meals'), heroes.length),
 					      healPct      = (mealsToShare / heroes.length) * 0.75;
 
 					party.removeResource('meals', mealsToShare);
@@ -356,6 +395,85 @@ export class ExploreGateway extends RootGateway implements OnGatewayConnection, 
 			player.queue.start();
 		} catch (error) {
 			console.log('Camp error', error);
+		}
+	}
+
+	@SubscribeMessage('getRecruitableHeroes')
+	async getRecruitableHeroes(sender: PlayerSocket) {
+		try {
+			if (!sender || !sender.userID) return;
+
+			const player = this.playerService.players[sender.userID],
+			      party  = await player.getParty();
+
+			if (!party.mapID) {
+				console.error('Party does not have a map set', party.partyID);
+			}
+
+			if (party.$currentStatus != EPartyCurrentStatus.IDLE) {
+				PacketService.sendToast(player, `You cannot do that right now.`);
+				return;
+			}
+
+			const map             = await this.locService.getMap(party.mapID),
+			      tileProps       = await this.locService.getTileProperties(map.mapID, party.posX, party.posY),
+			      currentHeroes   = this.locService.getTileInstanceProp(map.mapID, party.posX, party.posY, 'recruitableHeroes'),
+			      lastRefreshTime = this.locService.getTileInstanceProp(map.mapID, party.posX, party.posY, 'lastRecruitRefresh');
+
+			if (!tileProps.hasOwnProperty('maxRecruits')) {
+				console.log('Tried to request hero recruit refresh on tile with no maxRecruits defined:', map.mapID, party.posX, party.posY);
+				return;
+			}
+
+			let heroesAvailable: Array<Hero> = [];
+
+			if (Array.isArray(currentHeroes)) heroesAvailable = heroesAvailable.concat(currentHeroes);
+
+			const shouldRefresh = ((lastRefreshTime || 0) + GameConfig.heroRecruitment.defaultRefreshTime) < (new Date()).getTime();
+
+			if (shouldRefresh && Array.isArray(tileProps.recruitGroups)) {
+				//Generate new heroes for this tile
+				const groups = await RecruitGroup.query().whereIn('recruitGroupID', tileProps.recruitGroups),
+				      wl     = new WeightedList([]);
+
+				groups.forEach(group => {
+					Object.keys(group.heroTemplates).forEach(heroTemplateID => {
+						wl.add({
+							heroTemplateID: heroTemplateID,
+							weight:         group.heroTemplates[heroTemplateID]
+						});
+					});
+				});
+
+				for (let x = 0; x < tileProps.maxRecruits; x++) {
+					const pulledEntry = wl.pull(),
+					      newHero     = await this.heroService.generateHero(pulledEntry.heroTemplateID);
+
+					heroesAvailable.push(newHero);
+				}
+
+				//Set the instance property
+				this.locService.setTileInstanceProp(map.mapID, party.posX, party.posY, 'recruitableHeroes', heroesAvailable);
+				this.locService.setTileInstanceProp(map.mapID, party.posX, party.posY, 'lastRecruitRefresh', (new Date()).getTime());
+			}
+
+			const itemIDs = [];
+			//Send items belonging to these heroes to the player
+			heroesAvailable.forEach(hero => {
+				itemIDs.push(...Object.values(hero.equipment));
+			});
+
+			console.log('ItemIDs to find', itemIDs);
+			const itemPack = new PacketSendItems(await ItemService.getItems(itemIDs));
+
+			console.log(itemPack);
+
+			PacketService.sendPacket(player, itemPack);
+
+			//Send packet of heroes available for recruitment to the player
+			PacketService.sendPacket(player, new PacketSendRecruitableHeroes(heroesAvailable));
+		} catch (error) {
+			console.log('GetRecruitableHeroes error', error);
 		}
 	}
 }
