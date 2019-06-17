@@ -8,6 +8,7 @@ export interface ITrait {
 	name: string;
 	polarity: number;
 	chargen: 0|1;
+	incompatibleWith?: Array<string>;
 	skills?: Array<{
 		skill: string,
 		value: number

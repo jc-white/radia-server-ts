@@ -1,19 +1,22 @@
-import {ITrait, ITraitList} from '../interfaces/traits/traits.interface';
+import {Dictionary} from 'lodash';
+import {ITrait} from '../interfaces/traits/traits.interface';
+import * as _ from 'lodash';
 
 export const TraitsDictionary: Array<ITrait> = [
 	{
-		traitID:    'fit',
-		name:       'Physically Fit',
-		desc:       'You are more likely to succeed at physical tasks and able to learn skills requiring considerable brawn.',
-		polarity:   1,
-		chargen:    0,
-		skills:     [
+		traitID:          'fit',
+		name:             'Physically Fit',
+		desc:             'You are more likely to succeed at physical tasks and able to learn skills requiring considerable brawn.',
+		polarity:         1,
+		chargen:          0,
+		incompatibleWith: ['puny'],
+		skills:           [
 			{
 				skill: 'athletics',
 				value: 1
 			}
 		],
-		affinities: [
+		affinities:       [
 			{
 				affinity: 'brawn',
 				value:    1
@@ -26,12 +29,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'slowlearner',
-		name:       'Slow Learner',
-		desc:       'You learn skills somewhat more slowly than others.',
-		polarity:   -1,
-		chargen:    0,
-		affinities: [
+		traitID:          'slowlearner',
+		name:             'Slow Learner',
+		desc:             'You learn skills somewhat more slowly than others.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['studious'],
+		affinities:       [
 			{
 				affinity: 'learning',
 				value:    -1
@@ -40,18 +44,19 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'studious',
-		name:       'Studious',
-		desc:       'You learn skills more quickly than others and are able to more easily digest new information and unfamiliar situations.',
-		polarity:   1,
-		chargen:    0,
-		skills:     [
+		traitID:          'studious',
+		name:             'Studious',
+		desc:             'You learn skills more quickly than others and are able to more easily digest new information and unfamiliar situations.',
+		polarity:         1,
+		chargen:          0,
+		incompatibleWith: ['slowlearner'],
+		skills:           [
 			{
 				skill: 'insight',
 				value: 1
 			}
 		],
-		affinities: [
+		affinities:       [
 			{
 				affinity: 'learning',
 				value:    2
@@ -74,12 +79,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'awkward',
-		name:       'Awkward',
-		desc:       'You are somewhat socially inept and have a tougher time conversing with others.',
-		polarity:   -1,
-		chargen:    0,
-		affinities: [
+		traitID:          'awkward',
+		name:             'Awkward',
+		desc:             'You are somewhat socially inept and have a tougher time conversing with others.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['charming'],
+		affinities:       [
 			{
 				affinity: 'speechcraft',
 				value:    -1
@@ -88,12 +94,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'immoral',
-		name:       'Immoral',
-		desc:       'Your questionable morals open avenues to equally immoral skills and solutions to your problems, but may rub people the wrong way.',
-		polarity:   -1,
-		chargen:    0,
-		affinities: [
+		traitID:          'immoral',
+		name:             'Immoral',
+		desc:             'Your questionable morals open avenues to equally immoral skills and solutions to your problems, but may rub people the wrong way.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['honest'],
+		affinities:       [
 			{
 				affinity: 'charisma',
 				value:    -2
@@ -102,12 +109,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'spineless',
-		name:       'Spineless',
-		desc:       'You often lack the confidence and willpower to overcome very intense or dangerous situations.',
-		polarity:   -1,
-		chargen:    0,
-		affinities: [
+		traitID:          'spineless',
+		name:             'Spineless',
+		desc:             'You often lack the confidence and willpower to overcome very intense or dangerous situations.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['fearless'],
+		affinities:       [
 			{
 				affinity: 'fortitude',
 				value:    -1
@@ -134,18 +142,19 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'nimble',
-		name:       'Nimble',
-		desc:       'You are fleet of foot and able to more easily avoid attacks.',
-		polarity:   1,
-		chargen:    1,
-		skills:     [
+		traitID:          'nimble',
+		name:             'Nimble',
+		desc:             'You are fleet of foot and able to more easily avoid attacks.',
+		polarity:         1,
+		chargen:          1,
+		skills:           [
 			{
 				skill: 'acrobatics',
 				value: 1
 			}
 		],
-		affinities: [
+		incompatibleWith: ['barbaric'],
+		affinities:       [
 			{
 				affinity: 'evasiveness',
 				value:    2
@@ -172,18 +181,19 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'stickyfingers',
-		name:       'Sticky Fingers',
-		desc:       'You are naturally gifted at picking pockets and filching small wares.',
-		polarity:   1,
-		chargen:    0,
-		skills:     [
+		traitID:          'stickyfingers',
+		name:             'Sticky Fingers',
+		desc:             'You are naturally gifted at picking pockets and filching small wares.',
+		polarity:         1,
+		chargen:          0,
+		incompatibleWith: ['honest'],
+		skills:           [
 			{
 				skill: 'thievery',
 				value: 2
 			}
 		],
-		affinities: [
+		affinities:       [
 			{
 				affinity: 'evasiveness',
 				value:    1
@@ -192,12 +202,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'puny',
-		name:       'Puny',
-		desc:       'You are rather unskilled in matters of combat and physical prowess.',
-		polarity:   -1,
-		chargen:    0,
-		affinities: [
+		traitID:          'puny',
+		name:             'Puny',
+		desc:             'You are smaller in stature than most people.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['fit', 'barbaric'],
+		affinities:       [
 			{
 				affinity: 'brawn',
 				value:    -1
@@ -284,12 +295,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:  'fearless',
-		name:     'Fearless',
-		desc:     'Delving into the deepest of dungeons appeals to you more than most.',
-		polarity: 1,
-		chargen:  1,
-		skills:   [
+		traitID:          'fearless',
+		name:             'Fearless',
+		desc:             'Delving into the deepest of dungeons appeals to you more than most.',
+		polarity:         1,
+		chargen:          1,
+		incompatibleWith: ['spineless'],
+		skills:           [
 			{
 				skill: 'dungeoneering',
 				value: 2
@@ -312,12 +324,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:  'fugitive',
-		name:     'Fugitive',
-		desc:     `You've been on the lam for as long as you can remember. What crime did you commit again?`,
-		polarity: 1,
-		chargen:  1,
-		skills:   [
+		traitID:          'fugitive',
+		name:             'Fugitive',
+		desc:             `You've been on the lam for as long as you can remember. What crime did you commit again?`,
+		polarity:         1,
+		chargen:          1,
+		incompatibleWith: ['honest'],
+		skills:           [
 			{
 				skill: 'escape',
 				value: 2
@@ -326,20 +339,20 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:  'honest',
-		name:     'Honest',
-		desc:     'You are incapable of telling lies. However, you may occasionally be rewarded for your honesty.',
-		polarity: 0,
-		chargen:  1
+		traitID:          'honest',
+		name:             'Honest',
+		desc:             'You are incapable of telling lies. However, you may occasionally be rewarded for your honesty.',
+		polarity:         0,
+		chargen:          1
 	},
 
 	{
-		traitID:    'charming',
-		name:       'Charming',
-		desc:       'People are a little more enamored with you for no apparent reason.',
-		polarity:   1,
-		chargen:    1,
-		affinities: [
+		traitID:          'charming',
+		name:             'Charming',
+		desc:             'People are a little more enamored with you for no apparent reason.',
+		polarity:         1,
+		chargen:          1,
+		affinities:       [
 			{
 				affinity: 'charisma',
 				value:    1
@@ -362,12 +375,12 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'deadeye',
-		name:       'Dead Eye',
-		desc:       'Great aim is the name of the game.',
-		polarity:   1,
-		chargen:    1,
-		affinities: [
+		traitID:          'deadeye',
+		name:             'Dead Eye',
+		desc:             'Great aim is the name of the game.',
+		polarity:         1,
+		chargen:          1,
+		affinities:       [
 			{
 				affinity: 'accuracy',
 				value:    2
@@ -390,12 +403,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'barbaric',
-		name:       'Barbaric',
-		desc:       `You don't always know if your attacks are going to land, but when they do, they're guaranteed to hurt.`,
-		polarity:   0,
-		chargen:    1,
-		affinities: [
+		traitID:          'barbaric',
+		name:             'Barbaric',
+		desc:             `You don't always know if your attacks are going to land, but when they do, they're guaranteed to hurt.`,
+		polarity:         0,
+		chargen:          1,
+		incompatibleWith: ['puny', 'nimble'],
+		affinities:       [
 			{
 				affinity: 'combat',
 				value:    2
@@ -464,12 +478,12 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:  'swordsman',
-		name:     'Swordsman',
-		desc:     'You are fairly adept with a sword and other bladed weapons.',
-		polarity: 1,
-		chargen:  1,
-		skills:   [
+		traitID:          'swordsman',
+		name:             'Swordsman',
+		desc:             'You are fairly adept with a sword and other bladed weapons.',
+		polarity:         1,
+		chargen:          1,
+		skills:           [
 			{
 				skill: 'melee',
 				value: 2
@@ -478,12 +492,12 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:  'marksman',
-		name:     'Marksman',
-		desc:     'You are fairly adept with bows and other ranged weapons.',
-		polarity: 1,
-		chargen:  1,
-		skills:   [
+		traitID:          'marksman',
+		name:             'Marksman',
+		desc:             'You are fairly adept with bows and other ranged weapons.',
+		polarity:         1,
+		chargen:          1,
+		skills:           [
 			{
 				skill: 'ranged',
 				value: 2
@@ -492,12 +506,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'coward',
-		name:       'Coward',
-		desc:       'You are deathly afraid of combat and only fight when absolutely necessary.',
-		polarity:   -1,
-		chargen:    0,
-		affinities: [
+		traitID:          'coward',
+		name:             'Coward',
+		desc:             'You are deathly afraid of combat and only fight when absolutely necessary.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['brawler'],
+		affinities:       [
 			{
 				affinity: 'combat',
 				value:    -2
@@ -506,12 +521,13 @@ export const TraitsDictionary: Array<ITrait> = [
 	},
 
 	{
-		traitID:    'pacifist',
-		name:       'Pacifist',
-		desc:       'You despise combat in all its forms.',
-		polarity:   1,
-		chargen:    0,
-		affinities: [
+		traitID:          'pacifist',
+		name:             'Pacifist',
+		desc:             'You despise combat in all its forms.',
+		polarity:         1,
+		chargen:          0,
+		incompatibleWith: ['swordsman', 'marksman', 'barbaric', 'deadeye', 'coward', 'brawler'],
+		affinities:       [
 			{
 				affinity: 'combat',
 				value:    -10
@@ -525,5 +541,65 @@ export const TraitsDictionary: Array<ITrait> = [
 		desc:     'You sleep with one eye open (literally). You are less likely to be attacked in the wilderness or while camping.',
 		polarity: 1,
 		chargen:  1
+	},
+
+	{
+		traitID:          'abrasive',
+		name:             'Abrasive',
+		desc:             'You just have a tendency to rub people the wrong way.',
+		polarity:         -1,
+		chargen:          0,
+		incompatibleWith: ['charming'],
+		affinities:       [
+			{
+				affinity: 'charisma',
+				value:    -1
+			}
+		]
+	},
+
+	{
+		traitID:          'brawler',
+		name:             'Brawler',
+		desc:             'You just love a good fight.',
+		polarity:         0,
+		chargen:          1,
+		affinities:       [
+			{
+				affinity: 'combat',
+				value:    1
+			}
+		]
 	}
 ];
+
+export const TraitGroups: Dictionary<Array<string>> = {
+	personalityTraits: ['arrogant', 'charming', 'awkward', 'attractive', 'immoral', 'fearless', 'spineless', 'abrasive', 'bastard', 'clearmind'],
+	bodyTypeTraits:    ['fit', 'puny', 'nimble'],
+	basicCombatTraits: ['coward', 'brawler'],
+	combatTraitsRare:  ['barbaric', 'pacifist'],
+	generalTraits:     [':bodyTypeTraits', ':personalityTraits', ':basicCombatTraits', ':tradeskillTraits'],
+	shadyTraitsCommon: ['immoral', 'nimble', 'bastard', 'deadeye', 'arrogant', 'awkward', 'abrasive'],
+	shadyTraitsRare:   ['lightsleeper', 'plunderer', 'pennywise'],
+	tradeskillTraits:  ['handy', 'tinkerer', 'ironborn']
+};
+
+export function expandTraitGroup(traitGroupID: string, _pool: Array<string> = []) {
+	if (traitGroupID[0] == ':') traitGroupID = traitGroupID.slice(1);
+
+	const group = TraitGroups[traitGroupID];
+	let pool    = _pool || [];
+
+	if (group.length) {
+		group.forEach(traitID => {
+			//Nested trait group
+			if (traitID[0] == ':') {
+				expandTraitGroup(traitID, pool);
+			} else {
+				pool.push(traitID);
+			}
+		});
+	}
+
+	return _.uniq(pool);
+}
