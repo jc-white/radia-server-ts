@@ -6,6 +6,7 @@ import {Player} from '../../../../socket/player.class';
 import {DBService} from '../../../db/db.service';
 import {IChargenFormData} from '../../chargen/chargen.interface';
 import {BackstoriesDict} from '../dicts/backstories.dict';
+import {expandTraitGroup, TraitsDictionary} from '../dicts/traits.dict';
 import {EGender} from '../interfaces/hero/hero-misc.enum';
 import {HeroTemplate} from '../models/hero/hero-template.model';
 import {ItemService} from './item.service';
@@ -32,7 +33,7 @@ export class HeroService implements OnModuleInit {
 			this.handleHeroChange(result.new);
 		});
 
-		await this.generateHero('test');
+		await this.generateHero('novice_explorer');
 	}
 
 	static async getHeroes(userID: number, asJSON: boolean = false) {
@@ -126,20 +127,116 @@ export class HeroService implements OnModuleInit {
 		}
 
 		//Traits
+		let incompatTraitIDs = [];
+		hero.traits = [];
+
+		//Add backstory traits
+		if (template.backstoryID) {
+			const backstory = BackstoriesDict[template.backstoryID];
+
+			if (backstory.traits) {
+				incompatTraitIDs.push(...backstory.traits); //Mark backstory traits as incompatible so they don't get chosen by the weighted list
+
+				//console.log('Traits after backstory', hero.traits);
+			}
+		}
+
 		if (!_.isEmpty(template.traitPool)) {
+			let traitPool        = Object.assign({}, template.traitPool);
+
+			//Add guaranteed traits
+			const guaranteedTraits = _.pickBy(traitPool, chance => chance == -1);
+
+			if (!_.isEmpty(guaranteedTraits)) {
+				const guaranteedTraitIDs = _.difference(Object.keys(guaranteedTraits), hero.traits); //Omits traits that the hero already has (via backstory) so we don't lose trait slots on duplicates
+
+				if (guaranteedTraitIDs.length) {
+					hero.traits.push(...guaranteedTraitIDs);
+
+					//console.log('Traits after guaranteed', hero.traits);
+
+					//Reduce maxTraits by this amount so we don't pull too many traits from the random pool
+					template.maxTraits -= guaranteedTraitIDs.length;
+				}
+			}
+
+			//Find incompatible traits from backstory/guaranteed traits
+			if (hero.traits.length) {
+				hero.traits.forEach(traitID => {
+					let thisTrait = TraitsDictionary.find(trait => trait.traitID == traitID);
+
+					if (thisTrait.incompatibleWith && thisTrait.incompatibleWith.length) {
+						incompatTraitIDs.push(...thisTrait.incompatibleWith);
+					}
+				});
+
+				//console.log('These traits are incompatible with existing traits', incompatTraitIDs);
+			}
+
 			const wl = new WeightedList<{ traitID: string, weight: number }>([]);
 
-			Object.keys(template.traitPool).forEach(traitID => {
-				wl.add({
-					traitID: traitID,
-					weight:  template.traitPool[traitID]
-				});
+			//Add random traits
+			Object.keys(traitPool).forEach(traitID => {
+				//A colon denotes a trait group, so we should expand it and add its entries to this list
+				if (traitID[0] == ':') {
+					const traitsInGroup = expandTraitGroup(traitID);
+
+					if (traitsInGroup.length) {
+						traitsInGroup.forEach(t => wl.add({
+							traitID: t,
+							weight:  traitPool[traitID] //All entries in the group have the same weight
+						}));
+					}
+				} else {
+					wl.add({
+						traitID: traitID,
+						weight:  traitPool[traitID]
+					});
+				}
 			});
 
-			const traits = wl.pullMultiple(_.random(template.minTraits, Math.min(template.maxTraits, Object.keys(template.traitPool).length)));
+			//Remove currently incompatible traits from the pool, or traits that were already chosen
+			wl.removeBy(function (item: { traitID: string, weight: number }) {
+				return incompatTraitIDs.indexOf(item.traitID) > -1 || hero.traits.indexOf(item.traitID) > -1;
+			});
 
-			if (traits.length) {
-				hero.traits = traits.map(t => t.traitID);
+			const numTraitsToPull             = _.random(template.minTraits, Math.max(template.minTraits, template.maxTraits)),
+			      pulledTraits: Array<string> = [];
+
+			for (let x = 0; x < numTraitsToPull; x++) {
+				const pulledTrait = wl.pull(true);
+
+				//Remove traits incompatible with this trait from the pool so they don't get picked
+				if (pulledTrait) {
+					const thisTrait = TraitsDictionary.find(t => t.traitID == pulledTrait.traitID);
+
+					if (thisTrait && thisTrait.incompatibleWith && thisTrait.incompatibleWith.length) {
+						//If this trait is explicitly incompatible with other traits, remove those from the list
+						thisTrait.incompatibleWith.forEach(incompatTraitID => {
+							console.log(thisTrait.traitID + ': Removing incompat trait', incompatTraitID);
+							wl.removeBy({
+								traitID: incompatTraitID
+							});
+						});
+
+						//Check if any traits are incompatible with this one and remove those traits too
+						let incompat = TraitsDictionary.filter(t => Array.isArray(t.incompatibleWith) && t.incompatibleWith.indexOf(thisTrait.traitID) > -1).map(t => t.traitID);
+
+						incompat.forEach(traitID => wl.removeBy({
+							traitID: traitID
+						}));
+					}
+
+					pulledTraits.push(pulledTrait.traitID);
+
+					//console.log('Pushing ', pulledTrait.traitID);
+				}
+			}
+
+			if (pulledTraits.length) {
+				hero.traits.push(...pulledTraits);
+
+				//console.log('Final traits', hero.traits);
 			}
 		}
 
@@ -163,12 +260,10 @@ export class HeroService implements OnModuleInit {
 			hero.levelUp();
 		}
 
-		hero.name       = this.generateHeroName('human', hero.gender);
-
-		console.log('Generated hero');
+		hero.name = this.generateHeroName('human', hero.gender);
 
 		await hero.calc();
 
-		console.log(hero);
+		return hero;
 	}
 }
