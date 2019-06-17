@@ -71,6 +71,7 @@ export class Item extends Model {
 		//@ts-ignore: itemSubTypes is not parsed by node-pg because it's an array of custom types, so we need to convert its string representation into an array
 		//Since it's one-dimensional this can just be a regex + split
 		this.itemSubTypes = this.itemSubTypes ? this.itemSubTypes.replace(/[\{\}]/g, '').split(',') : [];
+
 	}
 
 	//region Usable

@@ -195,8 +195,6 @@ export class Hero extends Model {
 			});
 		}
 
-		console.log(statWeights);
-
 		const wl = new WeightedList<{ stat: string, weight: number }>([]);
 
 		Object.keys(statWeights).forEach(stat => {

@@ -1,6 +1,6 @@
 import {Model} from 'objection';
 import * as path from 'path';
-import {ICoordPair} from '../interfaces/explore.interface';
+import {ICoordPair} from '../../interfaces/explore.interface';
 import {SpawnGroup} from './spawnGroup.model';
 
 export class SpawnGroupLocationMap extends Model {

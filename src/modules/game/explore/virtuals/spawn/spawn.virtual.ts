@@ -1,8 +1,8 @@
-import {IVitality} from '../../common/interfaces/misc/vitality.interface';
-import {ESpawnType} from '../interfaces/spawn-type.enum';
-import {NPC} from '../models/npc.model';
+import {IVitality} from '../../../common/interfaces/misc/vitality.interface';
+import {ESpawnType} from '../../interfaces/spawn-type.enum';
+import {NPC} from '../../models/npc/npc.model';
 import * as shortid from 'shortid';
-import {WorldObject} from '../models/world-object.model';
+import {WorldObject} from '../../models/world-object/world-object.model';
 
 export class SpawnVirtual {
 	spawnVirtualID: string;

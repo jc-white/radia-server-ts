@@ -1,3 +1,4 @@
+import {IAffinityLevelList} from '../affinities/affinity.interface';
 import {IVitality} from '../misc/vitality.interface';
 import {ISkillLevelList} from '../skills/skills.interface';
 import {IStatList} from './stats.interface';

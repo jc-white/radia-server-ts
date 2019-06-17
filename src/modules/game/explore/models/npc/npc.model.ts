@@ -1,6 +1,6 @@
 import {Model} from 'objection';
-import {IVitality} from '../../common/interfaces/misc/vitality.interface';
-import {ISkillLevelList} from '../../common/interfaces/skills/skills.interface';
+import {IVitality} from '../../../common/interfaces/misc/vitality.interface';
+import {ISkillLevelList} from '../../../common/interfaces/skills/skills.interface';
 
 export class NPC extends Model {
 	static tableName: string = 'npcs';

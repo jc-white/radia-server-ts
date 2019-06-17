@@ -1,5 +1,5 @@
 import {Model} from 'objection';
-import {ESpawnType} from '../interfaces/spawn-type.enum';
+import {ESpawnType} from '../../interfaces/spawn-type.enum';
 
 export class SpawnGroupEntry extends Model {
 	static tableName: string = 'spawnGroupEntryMap';
